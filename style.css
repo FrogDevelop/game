@@ -1,0 +1,225 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: black;
+    background-image: url('back.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    position: relative;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+header {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 70px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 22px;
+    z-index: 10;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 100%;
+}
+
+footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 80px;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.8) 80%, rgba(0, 0, 0, 0) 100%);
+    z-index: 10;
+}
+
+.menu {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    height: 100%;
+}
+
+.menu_button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.menu_button:hover {
+    transform: scale(1.1);
+}
+
+.menu_button img {
+    width: 42px;
+    height: 42px;
+}
+
+.farm_plant {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    width: 100%;
+    z-index: 5;
+}
+
+.plant {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: auto;
+}
+
+.plant img {
+    height: 55vh;
+    max-height: 500px;
+    width: auto;
+}
+
+.cone {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(ellipse at center, rgba(255,255,150,0.3) 0%, rgba(0,0,0,0) 80%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.cone {
+    animation: glow 2s infinite ease-in-out alternate;
+}
+
+@keyframes glow {
+    from {
+        background: radial-gradient(ellipse at center, rgba(255, 255, 180, 0.25) 0%, rgba(0, 0, 0, 0) 80%);
+    }
+    to {
+        background: radial-gradient(ellipse at center, rgba(255, 255, 180, 0.5) 0%, rgba(0, 0, 0, 0) 90%);
+    }
+}
+
+.plant img {
+    animation: fadeIn 1s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.plant img {
+    filter: drop-shadow(0px 20px 20px rgba(0, 0, 0, 0.5));
+}
+
+header, footer {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.lamp-glow {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 250px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(255, 255, 200, 0.2), transparent 80%);
+    z-index: 3;
+    filter: blur(20px);
+    pointer-events: none;
+}
+
+.buds {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.bud {
+    position: absolute;
+    width: 32px;
+    transform: scale(0);
+    opacity: 0;
+    transition: transform 0.4s ease-out, opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.bud.active {
+    transform: scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.bud.collecting {
+    animation: budCollect 1s ease forwards;
+}
+
+@keyframes budCollect {
+    0% {
+        transform: scale(1) translateY(0); 
+    }
+    30% {
+        transform: scale(1.1) translateY(-20px); 
+    }
+    60% {
+        transform: scale(1) translateY(-10px); 
+    }
+    100% {
+        transform: scale(0.5) translateY(200px); 
+        opacity: 0; 
+    }
+}
+
+.bud1 { top: 33%; left: 46.5%; }
+.bud2 { top: 40%; left: 43%; }
+.bud3 { top: 57%; left: 50%; }
+.bud4 { top: 67%; left: 40%; }
+.bud5 { top: 62%; left: 64%; }
+
+.leaf {
+    width: 12px; 
+    height: 12px;
+    background-color: #029a0a;
+    border-radius: 50%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(var(--x), var(--y));
+    opacity: 0;
+    animation: leafFall 0.5s forwards;
+}
+
+@keyframes leafFall {
+    0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(var(--x), var(--y)) scale(1.3);
+    }
+}
+
