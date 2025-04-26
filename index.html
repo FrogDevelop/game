@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>medium Farm</title>
+</head>
+<body>
+    <header>
+        <div class="stats">
+            <div class="money">0 </div>
+            <img src="money.png" alt="">
+        </div>
+    </header>
+    <div class="farm_plant">
+        <div class="plant">
+            <img src="plant.png" alt="">
+        </div>
+    </div>
+    <div class="lamp-glow"></div>
+    <div class="buds">
+        <img src="bud.png" class="bud bud1">
+        <div class="leaves leaves1"></div>
+        <img src="bud.png" class="bud bud2">
+        <div class="leaves leaves2"></div>
+        <img src="bud.png" class="bud bud3">
+        <div class="leaves leaves3"></div>
+        <img src="bud.png" class="bud bud4">
+        <div class="leaves leaves4"></div>
+        <img src="bud.png" class="bud bud5">
+        <div class="leaves leaves5"></div>
+    </div>
+    
+    <div id="shop-modal">
+        <div class="shop-content">
+            <button class="close-shop-button" id="close-shop-button">&times;</button>
+            <div class="shop-items">
+                <!-- Сюда будут добавляться товары через JS -->
+            </div>
+        </div>
+    </div>
+    
+
+    <div id="inventory-modal" class="inventory-modal">
+        <div class="inventory-content">
+            <button id="close-inventory" class="close-inventory">&times;</button>
+            <div class="inventory-items"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="menu">
+            <button class="menu_button" id="shop_button"><img src="shop.png" alt="" style="height: 40px; width: 40px;"></button>
+            <button class="menu_button" id="darknet_button"><img src="laptop.png" alt=""></button>
+            <button class="menu_button" id="inventar_button"><img src="inventar.png" alt=""></button>
+        </div>
+    </footer>
+
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+          <span id="close-product-modal" class="close-button">&times;</span>
+          <img id="product-icon" src="" alt="Product Icon" class="modal-icon">
+          <h2 id="product-name"></h2>
+          <p id="product-description"></p>
+          <p id="product-benefit"></p>
+          <p id="product-price"></p>
+      
+          <div id="quantity-container" style="display:none; margin-top:10px;">
+            <label for="quantity">Количество:</label>
+            <input type="number" id="quantity" min="1" value="1" style="width:60px;">
+          </div>
+      
+          <button id="confirm-buy" style="margin-top:15px;">Купить</button>
+        </div>
+      </div>
+      
+      
+    <script src="script.js"></script>
+</body>
+</html>
