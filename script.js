@@ -72,10 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
         {
             id: 'light', name: 'Лампа для роста', price: 300, type: 'light', image: 'light.png',
             description: 'Дополнительный свет для ускоренного роста.', benefit: 'Увеличивает скорость роста.', quantitySelectable: false
-        },
-        {
-            id: 'pot', name: 'Горшок', price: 150, type: 'pot', image: 'pot.png',
-            description: 'Качественный горшок для посадки.', benefit: 'Позволяет посадить новое растение.', quantitySelectable: false
         }
     ];
 
@@ -96,8 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
             const itemCountElement = document.createElement('div');
             itemCountElement.classList.add('item-count');
-            
-            // <-- Исправляем тут!
             if (typeof data === 'object' && data !== null && 'count' in data) {
                 itemCountElement.textContent = `x${data.count}`;
             } else {
@@ -109,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             inventoryItems.appendChild(itemElement);
     
             itemElement.addEventListener('click', () => {
-                openItemActions(id);
+                openItemActions(id, event.currentTarget);
             });
     
             itemCount++;
@@ -136,26 +130,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function openItemActions(itemId) {
+    function openItemActions(itemId, targetElement) {
         const item = inventory[itemId];
         if (!item) return;
-
+    
         let actions = [];
-
+    
         if (item.type === 'fertilizer') {
             actions.push({ label: 'Применить', action: () => applyFertilizer(itemId) });
         }
-
+    
         if (item.type === 'zip' && inventory['shishka']?.count >= 5) {
             actions.push({ label: 'Расфасовать', action: () => packShishki(itemId) });
+            actions.push({ label: 'Расфасовать все', action: () => packAllShishki(itemId) });
         }
-
+    
         if (item.type === 'packed_product') {
             actions.push({ label: 'Продать', action: () => sellZip(itemId) });
         }
-
-        showActionMenu(actions);
+    
+        showActionMenu(actions, targetElement);
     }
+    
+    
+    function packAllShishki(zipId) {
+        const shishkaItem = inventory['shishka'];
+        const zipItem = inventory[zipId];
+    
+        if (!shishkaItem || !zipItem) {
+            alert('Нет шишек или zip пакетов!');
+            return;
+        }
+    
+        const availableShishki = shishkaItem.count;
+        const availableZips = zipItem.count;
+    
+        const maxPackable = Math.min(Math.floor(availableShishki / 5), availableZips);
+    
+        if (maxPackable === 0) {
+            alert('Не хватает шишек или zip пакетов для расфасовки!');
+            return;
+        }
+    
+        // Уменьшаем количество шишек и пакетов
+        decreaseItem('shishka', maxPackable * 5);
+        decreaseItem(zipId, maxPackable);
+    
+        // Добавляем расфасованные zip с шишкой
+        if (!inventory['zip_shishka']) {
+            inventory['zip_shishka'] = { count: 0, type: 'packed_product', name: 'Zip с шишкой' };
+        }
+        inventory['zip_shishka'].count += maxPackable;
+    
+        saveInventory();
+        updateInventory();
+    }
+    
 
     function applyFertilizer(itemId) {
         alert('Удобрение применено!');
@@ -185,6 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
             decreaseItem(itemId, 1);
             localStorage.setItem('playerMoney', playerMoney);
             updateInventory();
+
+            updateMoneyDisplay(); 
         }
     }
 
@@ -203,14 +235,57 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('inventory', JSON.stringify(inventory));
     }
 
-    function showActionMenu(actions) {
-        if (actions.length === 0) return;
-        const actionLabels = actions.map((a, i) => `${i + 1}: ${a.label}`).join('\n');
-        const choice = prompt(`Выберите действие:\n${actionLabels}`);
-        const index = parseInt(choice) - 1;
-        if (actions[index]) {
-            actions[index].action();
+    function showActionMenu(actions, targetElement) {
+        const actionMenu = document.getElementById('action-menu');
+        actionMenu.innerHTML = ''; // Очищаем старые кнопки
+    
+        if (actions.length === 0) {
+            actionMenu.classList.add('hidden');
+            return;
         }
+    
+        actions.forEach(action => {
+            const button = document.createElement('button');
+            button.className = 'action-button';
+            button.textContent = action.label;
+            button.addEventListener('click', () => {
+                action.action();
+                hideActionMenu();
+            });
+            actionMenu.appendChild(button);
+        });
+    
+        const rect = targetElement.getBoundingClientRect();
+    
+        // Новое позиционирование — меню справа от элемента
+        actionMenu.style.top = `${rect.top + window.scrollY + rect.height / 2 - actionMenu.offsetHeight / 2}px`; 
+        actionMenu.style.left = `${rect.right + window.scrollX + 10}px`; // немного отступим вправо
+    
+        // Чтобы корректно рассчитать offsetHeight, сначала показать элемент невидимым
+        actionMenu.classList.add('hidden');
+        actionMenu.style.display = 'block'; // временно включаем отображение
+    
+        // После того как браузер прочитал размеры:
+        requestAnimationFrame(() => {
+            actionMenu.style.top = `${rect.top + window.scrollY + rect.height / 2 - actionMenu.offsetHeight / 2}px`;
+            actionMenu.style.left = `${rect.right + window.scrollX + 10}px`;
+            actionMenu.classList.remove('hidden');
+            actionMenu.style.display = ''; // убираем фикс
+        });
+    }
+    
+    
+    // Скрытие меню при клике вне его
+    document.addEventListener('click', (event) => {
+        const actionMenu = document.getElementById('action-menu');
+        if (!actionMenu.contains(event.target) && !event.target.closest('.inventory-item')) {
+            hideActionMenu();
+        }
+    });
+    
+    function hideActionMenu() {
+        const actionMenu = document.getElementById('action-menu');
+        actionMenu.classList.add('hidden');
     }
 
     function showBud(bud) {
@@ -276,40 +351,44 @@ document.addEventListener('DOMContentLoaded', () => {
     function createLeaves(bud) {
         const leafContainer = document.createElement('div');
         leafContainer.className = 'leaves';
-
+    
         const budRect = bud.getBoundingClientRect();
         const parentRect = bud.parentElement.getBoundingClientRect();
-
+    
         const offsetX = budRect.left - parentRect.left;
         const offsetY = budRect.top - parentRect.top;
-
+    
         leafContainer.style.position = 'absolute';
-        leafContainer.style.left = `${offsetX}px`;
-        leafContainer.style.top = `${offsetY}px`;
-
+        leafContainer.style.left = `${offsetX}px`;  // Используем корректное значение с шаблонной строкой
+        leafContainer.style.top = `${offsetY}px`;   // Используем корректное значение с шаблонной строкой
+    
         for (let i = 0; i < 4; i++) {
             const leaf = document.createElement('div');
             leaf.className = 'leaf';
-            leaf.style.setProperty('--x', `${Math.random() * 40 - 20}px`);
-            leaf.style.setProperty('--y', `${Math.random() * -40}px`);
+            leaf.style.setProperty('--x', `${Math.random() * 40 - 20}px`);  // Исправлено на шаблонную строку
+            leaf.style.setProperty('--y', `${Math.random() * -40}px`);     // Исправлено на шаблонную строку
             leafContainer.appendChild(leaf);
         }
-
+    
         bud.parentElement.appendChild(leafContainer);
-
+    
         setTimeout(() => {
             leafContainer.remove();
         }, 500);
     }
+    
+    updateMoneyDisplay();
 
      // === МАГАЗИН ===
      function showShop() {
         shopModal.classList.add('open');
         renderShopItems();
+        updateMoneyDisplay(); 
     }
 
     function closeShop() {
         shopModal.classList.remove('open');
+        updateMoneyDisplay(); 
     }
 
     function renderShopItems() {
@@ -337,6 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 openProductModal(item);
             });
         });
+        updateMoneyDisplay(); 
     }
 
     function openProductModal(item) {
@@ -356,10 +436,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         productModal.classList.add('open');
+        updateMoneyDisplay(); 
     }
 
     function closeProductModal() {
         productModal.classList.remove('open');
+        updateMoneyDisplay(); 
     }
 
     function confirmPurchase() {
@@ -384,6 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             alert('Недостаточно средств!');
         }
+        updateMoneyDisplay(); 
     }
 
     if (shopButton) {
@@ -400,5 +483,112 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (confirmBuyButton) {
         confirmBuyButton.addEventListener('click', confirmPurchase);
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    const quantityInput = document.getElementById("quantity");
+    const increaseButton = document.getElementById("increase-quantity");
+    const decreaseButton = document.getElementById("decrease-quantity");
+
+    let quantity = 1; 
+
+    increaseButton.addEventListener("click", function() {
+        quantity++;
+        updateQuantity();
+    });
+
+    // Уменьшаем количество
+    decreaseButton.addEventListener("click", function() {
+        if (quantity > 1) {
+            quantity--;
+            updateQuantity();
+        }
+    });
+
+    // Обновляем значение в поле
+    function updateQuantity() {
+        quantityInput.value = quantity;
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Получаем все кнопки на странице
+    const allButtons = document.querySelectorAll('button');
+
+    allButtons.forEach(button => {
+        button.addEventListener("mousedown", () => {
+            button.style.transform = "scale(0.95)";
+        });
+
+        button.addEventListener("mouseup", () => {
+            button.style.transform = "scale(1)";
+        });
+
+        // Поддержка для мобильных устройств
+        button.addEventListener("touchstart", () => {
+            button.style.transform = "scale(0.95)";
+        });
+
+        button.addEventListener("touchend", () => {
+            button.style.transform = "scale(1)";
+        });
+    });
+
+    // Для кнопок с увеличением/уменьшением количества
+    const increaseButton = document.getElementById("increase-quantity");
+    const decreaseButton = document.getElementById("decrease-quantity");
+
+    increaseButton.addEventListener("mousedown", function() {
+        increaseButton.style.transform = "scale(0.95)";
+    });
+
+    decreaseButton.addEventListener("mousedown", function() {
+        decreaseButton.style.transform = "scale(0.95)";
+    });
+
+    increaseButton.addEventListener("mouseup", function() {
+        increaseButton.style.transform = "scale(1)";
+    });
+
+    decreaseButton.addEventListener("mouseup", function() {
+        decreaseButton.style.transform = "scale(1)";
+    });
+
+    // Поддержка для мобильных устройств
+    increaseButton.addEventListener("touchstart", function() {
+        increaseButton.style.transform = "scale(0.95)";
+    });
+
+    decreaseButton.addEventListener("touchstart", function() {
+        decreaseButton.style.transform = "scale(0.95)";
+    });
+
+    increaseButton.addEventListener("touchend", function() {
+        increaseButton.style.transform = "scale(1)";
+    });
+
+    decreaseButton.addEventListener("touchend", function() {
+        decreaseButton.style.transform = "scale(1)";
+    });
+});
+
+document.getElementById('close-shop-button').addEventListener('click', function() {
+    // Закрыть окно магазина
+    const shopModal = document.getElementById('shop-modal');
+    if (shopModal.classList.contains('open')) {
+        shopModal.classList.remove('open');
+    }
+
+    // Закрыть окно с товаром, если оно открыто
+    const productModal = document.getElementById('product-modal');
+    if (productModal.classList.contains('open')) {
+        productModal.classList.remove('open');
+    }
+
+    // Закрыть все другие модальные окна, если они открыты (например, инвентарь)
+    const inventoryModal = document.getElementById('inventory-modal');
+    if (inventoryModal.classList.contains('open')) {
+        inventoryModal.classList.remove('open');
     }
 });

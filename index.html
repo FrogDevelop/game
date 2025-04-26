@@ -59,22 +59,31 @@
 
     <div id="product-modal" class="modal">
         <div class="modal-content">
-          <span id="close-product-modal" class="close-button">&times;</span>
-          <img id="product-icon" src="" alt="Product Icon" class="modal-icon">
-          <h2 id="product-name"></h2>
-          <p id="product-description"></p>
-          <p id="product-benefit"></p>
-          <p id="product-price"></p>
-      
-          <div id="quantity-container" style="display:none; margin-top:10px;">
-            <label for="quantity">Количество:</label>
-            <input type="number" id="quantity" min="1" value="1" style="width:60px;">
-          </div>
-      
-          <button id="confirm-buy" style="margin-top:15px;">Купить</button>
+            <span id="close-product-modal" class="close-button">&times;</span>
+            <img id="product-icon" src="" alt="Product Icon" class="modal-icon">
+            <h2 id="product-name"></h2>
+            <p id="product-description"></p>
+            <p id="product-benefit"></p>
+            <p id="product-price"></p>
+    
+            <div id="quantity-container" style="display:block; margin-top:10px;">
+                <label for="quantity">Количество:</label>
+                <div id="quantity-controls">
+                    <button id="decrease-quantity" class="quantity-button">-</button>
+                    <input type="text" id="quantity" value="1" readonly style="width: 60px; text-align: center; background-color: #444; color: #fff; border: 1px solid #555;">
+                    <button id="increase-quantity" class="quantity-button">+</button>
+                </div>
+            </div>
+    
+            <button id="confirm-buy" style="margin-top:15px;">Купить</button>
         </div>
-      </div>
+    </div>
+    
       
+      <div id="action-menu" class="action-menu hidden"></div>
+
+      <div id="notification" class="hidden"></div>
+
       
     <script src="script.js"></script>
 </body>
