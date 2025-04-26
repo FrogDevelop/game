@@ -213,10 +213,8 @@ footer {
 
 .close-inventory {
     position: relative;
-    text-align: right;
     background: none;
     border: none;
-    width: 121%;
     color: white;
     font-size: 20px;
     margin-bottom: 20px;
@@ -310,8 +308,6 @@ footer {
     background: none;
     border: none;
     color: white;
-    width: 121%;
-    text-align: right;
     font-size: 20px;
     margin-top: 10px;
     margin-bottom: 10px;
