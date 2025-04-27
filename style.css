@@ -314,7 +314,6 @@ footer {
     color: white;
     font-size: 20px;
     margin-top: 10px;
-    margin-bottom: 10px;
     width: 120%;
     text-align: right;
     cursor: pointer;
@@ -331,7 +330,7 @@ footer {
     gap: 15px;
     overflow-y: auto;
     height: 70vh;
-    margin-top: 50px;
+    margin-top: 10px;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -517,7 +516,7 @@ header{
 .modal {
     display: none;
     position: fixed;
-    bottom: 40px; /* Смещаем окно немного вниз */
+    bottom: 40px; 
     left: 50%;
     transform: translateX(-50%); /* Центрируем по горизонтали */
     width: 90%;
