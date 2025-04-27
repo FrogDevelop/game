@@ -512,23 +512,20 @@ header{
     opacity: 1;
 }
 
-/* Основной стиль для модального окна */
 .modal {
     display: none;
     position: fixed;
-    top: 10%;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
     max-width: 700px;
-    max-height: 80%;
     background: #2c2c2c;
     color: #fff;
     padding: 20px;
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4);
     z-index: 199999;
     border-radius: 8px;
-    overflow-y: auto;
     animation: fadeIn 0.3s ease;
 }
 
@@ -536,7 +533,7 @@ header{
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translate(-50%, -10%) scale(0.9);
+        transform: translate(-50%, 20%) scale(0.95);
     }
     to {
         opacity: 1;
@@ -605,11 +602,11 @@ header{
 #quantity-container {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     font-size: 16px;
     color: #ccc;
     margin-top: 15px;
-    justify-content: center;
 }
 
 #quantity-controls {
@@ -673,8 +670,7 @@ header{
     .modal {
         width: 95%;
         padding: 15px;
-        top: 5%;
-        max-height: 90%;
+        bottom: 20px;
     }
 
     #product-name {
@@ -690,6 +686,7 @@ header{
         font-size: 16px;
     }
 }
+
 
 /* Для всех кнопок */
 button {
