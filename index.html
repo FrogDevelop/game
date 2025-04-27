@@ -52,7 +52,7 @@
     <footer>
         <div class="menu">
             <button class="menu_button" id="shop_button"><img src="shop.png" alt="" style="height: 40px; width: 40px;"></button>
-            <button class="menu_button" id="darknet_button"><img src="laptop.png" alt=""></button>
+            <button class="menu_button" id="darknet-button"><img src="laptop.png" alt=""></button>
             <button class="menu_button" id="inventar_button"><img src="inventar.png" alt=""></button>
         </div>
     </footer>
@@ -81,49 +81,50 @@
           
       <div id="action-menu" class="action-menu hidden"></div>
 
-      <div id="darknet-modal" class="darknet-modal">
-        <div class="darknet-content">
-            <span id="close-darknet-modal" class="close-darknet-modal">&times;</span>
+      <div id="darknet-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-darknet-modal" class="close-darknet-button">&times;</span>
+            <h2>Добро пожаловать в Darknet</h2>
             
-            <!-- Заголовок -->
-            <div class="darknet-header">
-                <h2>Даркнет</h2>
-            </div>
-            
-            <!-- Вкладки -->
-            <div class="darknet-tabs">
-                <button class="tab-button" data-tab="buying">Покупка товаров</button>
-                <button class="tab-button" data-tab="markets">Черные рынки</button>
-                <button class="tab-button" data-tab="sales">Продажа</button>
-                <button class="tab-button" data-tab="settings">Настройки</button>
-            </div>
-            
-            <!-- Контент для вкладок -->
-            <div class="darknet-tab-content">
-                <div class="tab-panel" id="buying">
-                    <h3>Покупка товаров</h3>
-                    <p>Здесь будет информация о товарах для покупки.</p>
-                </div>
-                <div class="tab-panel" id="markets">
-                    <h3>Черные рынки</h3>
-                    <p>Доступ к черным рынкам.</p>
-                </div>
-                <div class="tab-panel" id="sales">
-                    <h3>Продажа</h3>
-                    <p>В этой вкладке будет информация о продаже товаров.</p>
-                </div>
-                <div class="tab-panel" id="settings">
-                    <h3>Настройки</h3>
-                    <p>Настройки подключения и другие параметры.</p>
-                </div>
+            <div id="darknet-tabs" class="darknet-tabs">
+                <button class="tab-button" id="tab-1">Продажа</button>
+                <button class="tab-button" id="tab-2">Магазин</button>
+                <button class="tab-button" id="tab-3">История</button>
             </div>
     
-            <!-- Статус подключения -->
-            <div class="darknet-footer">
-                <p id="status">Статус: Подключение...</p>
+            <div id="darknet-tab-content">
+                <div id="tab-1-content" class="tab-panel active">
+                    <h3>Продажа пакетов с шишками</h3>
+            
+                    <!-- Чат -->
+                    <div id="chat-window">
+                        <!-- Сообщения будут добавляться сюда через JS -->
+                    </div>
+            
+                    <!-- Форма для продажи пакетов с шишками -->
+                    <div class="input-area">
+                        <input type="text" id="message-input" placeholder="Напишите сообщение...">
+                        <button id="send-message-button">Отправить</button>
+                    </div>
+            
+                    <!-- Кнопка для начала продажи -->
+                    <div class="product-form">
+                        <h4>Продайте пакеты с шишками:</h4>
+                        <input type="number" id="amount" placeholder="Количество пакетов" min="1" required>
+                        <input type="number" id="price" placeholder="Цена за пакет" min="1" required>
+                        <button id="sell-button">Продать</button>
+                    </div>
+                </div>
             </div>
+            
+            
         </div>
     </div>
+    
+    
+        </div>
+    </div>
+    
     
     
     

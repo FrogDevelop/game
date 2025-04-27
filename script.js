@@ -593,47 +593,136 @@ document.getElementById('close-shop-button').addEventListener('click', function(
     }
 });
 
-// Открытие Даркнет меню
-document.getElementById('darknet_button').addEventListener('click', function() {
-    document.getElementById('darknet-modal').style.display = 'block';
-    updateStatus('Подключение...');
-});
+// Открытие и закрытие модального окна
+const openDarknetModal = () => {
+    const modal = document.getElementById('darknet-modal');
+    modal.classList.add('open');
+};
 
-// Закрытие Даркнет меню
-document.getElementById('close-darknet-modal').addEventListener('click', function() {
-    document.getElementById('darknet-modal').style.display = 'none';
-});
+const closeDarknetModal = () => {
+    const modal = document.getElementById('darknet-modal');
+    modal.classList.remove('open');
+};
 
-// Функция обновления статуса
-function updateStatus(message) {
-    document.getElementById('status').innerText = `Статус: ${message}`;
-}
-
-// Переключение вкладок
+// Обработчик для вкладок
 const tabs = document.querySelectorAll('.tab-button');
-const panels = document.querySelectorAll('.tab-panel');
+const tabContent = document.getElementById('darknet-tab-content');
 
 tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-        const targetTab = tab.getAttribute('data-tab');
+    tab.addEventListener('click', function() {
+        tabs.forEach(t => t.classList.remove('active')); // Убираем активный класс у всех вкладок
+        this.classList.add('active'); // Добавляем активный класс текущей вкладке
+        
+        tabContent.innerHTML = ''; // Очистка контента
 
-        // Скрываем все панели
-        panels.forEach(panel => panel.classList.remove('active'));
-        
-        // Показываем соответствующую панель
-        document.getElementById(targetTab).classList.add('active');
-        
-        // Активируем соответствующую вкладку
-        tabs.forEach(tab => tab.classList.remove('active'));
-        tab.classList.add('active');
+        // Добавление контента для выбранной вкладки
+        switch (this.id) {
+            case 'tab-1':
+                tabContent.innerHTML = '<h3>Продажа товаров</h3><p>Здесь будет информация о товарах, которые можно продать.</p>';
+                break;
+            case 'tab-2':
+                tabContent.innerHTML = '<h3>Магазины</h3><p>Здесь будут отображаться магазины Darknet.</p>';
+                break;
+            case 'tab-3':
+                tabContent.innerHTML = '<h3>История</h3><p>Здесь будет отображаться история ваших действий.</p>';
+                break;
+        }
     });
 });
 
-// Инициализация первой вкладки как активной
-document.querySelector('.tab-button').classList.add('active');
-document.getElementById('buying').classList.add('active');
+// Закрытие модального окна при клике на крестик
+document.getElementById('close-darknet-modal').addEventListener('click', closeDarknetModal);
 
-// Пример обновления статуса
-setTimeout(function() {
-    updateStatus('Подключение успешно завершено.');
-}, 3000); // Через 3 секунды показываем успешное подключение
+// Пример открытия модального окна (например, кнопка для открытия)
+document.getElementById('darknet-button').addEventListener('click', openDarknetModal);
+
+document.addEventListener('DOMContentLoaded', function () {
+    const tabs = document.querySelectorAll('.tab-button');
+    const tabContent = document.getElementById('darknet-tab-content');
+    const chatWindow = document.getElementById('chat-window');
+    const sendButton = document.getElementById('send-message-button');
+    const messageInput = document.getElementById('message-input');
+    const sellButton = document.getElementById('sell-button');
+    const amountInput = document.getElementById('amount');
+    const offerSection = document.getElementById('offer-section');
+    const offerPrice = document.getElementById('offer-price');
+    const acceptButton = document.getElementById('accept-button');
+    const declineButton = document.getElementById('decline-button');
+
+    // Сначала отображаем чат и сообщение от скупщика
+    function sendMessageToBuyer(message, type = 'incoming') {
+        const newMessage = document.createElement('div');
+        newMessage.classList.add('message', type);
+        newMessage.innerHTML = `
+            <div class="message-header">
+                <img src="avatar1.png" alt="Buyer Avatar" class="avatar">
+                <span class="username">Скупщик</span>
+                <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+            </div>
+            <div class="message-body">
+                <p>${message}</p>
+            </div>
+        `;
+        chatWindow.appendChild(newMessage);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // Инициализируем чат с скупщиком
+    sendMessageToBuyer("Привет, готов толкнуть тебе стаф.");
+    sendMessageToBuyer("Сколько у тебя есть?");
+
+    // Обработка ввода количества пакетов
+    sellButton.addEventListener('click', function () {
+        const amount = amountInput.value.trim();
+        if (amount) {
+            // Вычисление цены
+            const basePricePerUnit = 20; // $20 за пакетик
+            let totalPrice = basePricePerUnit * parseInt(amount);
+
+            // Генерация случайной изменения цены от скупщика
+            const priceVariation = (Math.random() - 0.5) * 0.2; // Изменение цены на +/- 20%
+            totalPrice += totalPrice * priceVariation;
+            totalPrice = totalPrice.toFixed(2);
+
+            // Отправляем предложение скупщика
+            offerPrice.textContent = `Цена: $${totalPrice} за ${amount} пакетов.`;
+            offerSection.classList.remove('hidden');
+        } else {
+            alert("Пожалуйста, укажите количество пакетов.");
+        }
+    });
+
+    // Кнопка "Согласиться"
+    acceptButton.addEventListener('click', function () {
+        sendMessageToBuyer(`Согласен, продаю ${amountInput.value.trim()} пакетов.`);
+        offerSection.classList.add('hidden');
+    });
+
+    // Кнопка "Отказаться"
+    declineButton.addEventListener('click', function () {
+        sendMessageToBuyer("Нет, не устраивает цена.");
+        offerSection.classList.add('hidden');
+    });
+
+    // Отправка сообщений с пользователем
+    sendButton.addEventListener('click', function () {
+        const messageText = messageInput.value.trim();
+        if (messageText) {
+            const newMessage = document.createElement('div');
+            newMessage.classList.add('message', 'outgoing');
+            newMessage.innerHTML = `
+                <div class="message-header">
+                    <img src="avatar2.png" alt="User Avatar" class="avatar">
+                    <span class="username">Ты</span>
+                    <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+                </div>
+                <div class="message-body">
+                    <p>${messageText}</p>
+                </div>
+            `;
+            chatWindow.appendChild(newMessage);
+            messageInput.value = ''; // Очистить поле ввода
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Прокрутить чат вниз
+        }
+    });
+});
