@@ -516,26 +516,27 @@ header{
 .modal {
     display: none;
     position: fixed;
-    bottom: 40px; 
+    top: 10%;
     left: 50%;
-    transform: translateX(-50%); /* Центрируем по горизонтали */
+    transform: translateX(-50%);
     width: 90%;
     max-width: 700px;
-    background: #2c2c2c; /* Темный фон */
-    color: #fff; /* Белый текст */
+    max-height: 80%;
+    background: #2c2c2c;
+    color: #fff;
     padding: 20px;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4); /* Тени */
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4);
     z-index: 199999;
     border-radius: 8px;
-    overflow: hidden;
+    overflow-y: auto;
     animation: fadeIn 0.3s ease;
 }
 
-/* Анимация появления модального окна */
+/* Анимация появления */
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translate(-50%, 20%) scale(0.8); /* Появление с небольшим смещением */
+        transform: translate(-50%, -10%) scale(0.9);
     }
     to {
         opacity: 1;
@@ -565,7 +566,7 @@ header{
 }
 
 .close-button:hover {
-    color: #ff4d4d; /* Красный цвет при наведении */
+    color: #ff4d4d;
 }
 
 /* Иконка продукта */
@@ -581,21 +582,14 @@ header{
 #product-name {
     font-size: 24px;
     font-weight: bold;
-    color: #fff;
     margin-bottom: 10px;
 }
 
-/* Описание продукта */
-#product-description {
-    font-size: 16px;
-    color: #ccc; /* Более светлый текст */
-    margin-bottom: 15px;
-}
-
-/* Преимущества продукта */
+/* Описание и преимущества продукта */
+#product-description,
 #product-benefit {
     font-size: 16px;
-    color: #ccc; /* Светлый цвет */
+    color: #ccc;
     margin-bottom: 15px;
 }
 
@@ -603,27 +597,56 @@ header{
 #product-price {
     font-size: 18px;
     font-weight: 600;
-    color: #ffcc00; /* Желтая цена */
+    color: #ffcc00;
     margin-bottom: 20px;
 }
 
-/* Контейнер для выбора количества */
+/* Контейнер количества */
 #quantity-container {
-    display: block;
-    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-size: 16px;
-    color: #ccc; /* Светлый текст */
-    text-align: left;
+    color: #ccc;
+    margin-top: 15px;
+    justify-content: center;
 }
 
+#quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Кнопки +/- */
+.quantity-button {
+    background-color: #555;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.quantity-button:hover {
+    background-color: #666;
+}
+
+/* Поле количества */
 #quantity {
     width: 60px;
-    padding: 5px;
     font-size: 16px;
-    border: 1px solid #555; /* Темные границы */
+    padding: 5px;
+    text-align: center;
+    background-color: #444;
+    color: white;
+    border: 1px solid #555;
     border-radius: 5px;
-    background-color: #444; /* Темный фон */
-    color: #fff; /* Белый текст */
+    pointer-events: none;
 }
 
 /* Кнопка "Купить" */
@@ -637,8 +660,7 @@ header{
     border-radius: 5px;
     cursor: pointer;
     width: 100%;
-    margin-top: 15px;
-    margin-bottom: 15px;
+    margin-top: 20px;
     transition: background-color 0.3s ease;
 }
 
@@ -651,6 +673,8 @@ header{
     .modal {
         width: 95%;
         padding: 15px;
+        top: 5%;
+        max-height: 90%;
     }
 
     #product-name {
@@ -665,54 +689,6 @@ header{
     #confirm-buy {
         font-size: 16px;
     }
-
-    .modal-icon {
-        width: 100px;
-        height: 100px;
-    }
-}
-
-#quantity-container {
-    display: flex;
-    align-items: center;
-    font-size: 16px;
-    color: #ccc;
-    text-align: left;
-    margin-top: 15px;
-}
-
-#quantity-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.quantity-button {
-    background-color: transparent;
-    color: white;
-    font-size: 20px;
-    font-weight: bold;
-    width: 30px;
-    height: 30px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.quantity-button:hover {
-    background-color: transparent;
-}
-
-#quantity {
-    width: 60px;
-    font-size: 16px;
-    padding: 5px;
-    text-align: center;
-    background-color: #444;
-    color: white;
-    border: 1px solid #555;
-    border-radius: 5px;
-    pointer-events: none; /* Отключаем редактирование вручную */
 }
 
 /* Для всех кнопок */
