@@ -517,7 +517,7 @@ header{
 .modal {
     display: none;
     position: fixed;
-    bottom: 10px; /* Смещаем окно немного вниз */
+    bottom: 40px; /* Смещаем окно немного вниз */
     left: 50%;
     transform: translateX(-50%); /* Центрируем по горизонтали */
     width: 90%;
