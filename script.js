@@ -592,3 +592,48 @@ document.getElementById('close-shop-button').addEventListener('click', function(
         inventoryModal.classList.remove('open');
     }
 });
+
+// Открытие Даркнет меню
+document.getElementById('darknet_button').addEventListener('click', function() {
+    document.getElementById('darknet-modal').style.display = 'block';
+    updateStatus('Подключение...');
+});
+
+// Закрытие Даркнет меню
+document.getElementById('close-darknet-modal').addEventListener('click', function() {
+    document.getElementById('darknet-modal').style.display = 'none';
+});
+
+// Функция обновления статуса
+function updateStatus(message) {
+    document.getElementById('status').innerText = `Статус: ${message}`;
+}
+
+// Переключение вкладок
+const tabs = document.querySelectorAll('.tab-button');
+const panels = document.querySelectorAll('.tab-panel');
+
+tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        const targetTab = tab.getAttribute('data-tab');
+
+        // Скрываем все панели
+        panels.forEach(panel => panel.classList.remove('active'));
+        
+        // Показываем соответствующую панель
+        document.getElementById(targetTab).classList.add('active');
+        
+        // Активируем соответствующую вкладку
+        tabs.forEach(tab => tab.classList.remove('active'));
+        tab.classList.add('active');
+    });
+});
+
+// Инициализация первой вкладки как активной
+document.querySelector('.tab-button').classList.add('active');
+document.getElementById('buying').classList.add('active');
+
+// Пример обновления статуса
+setTimeout(function() {
+    updateStatus('Подключение успешно завершено.');
+}, 3000); // Через 3 секунды показываем успешное подключение
