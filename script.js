@@ -1,3 +1,5 @@
+const _preloaderStart = Date.now();
+
 // Глобальные переменные
 let playerMoney = parseInt(localStorage.getItem('playerMoney')) || 1000;
 let shishCount = parseInt(localStorage.getItem('shishCount')) || 0;
@@ -134,42 +136,66 @@ function packShishki(zipId) {
 
 function showActionMenu(actions, targetElement) {
     const actionMenu = document.getElementById('action-menu');
-    actionMenu.innerHTML = ''; // Очищаем старые кнопки
+    actionMenu.innerHTML = ''; // очищаем прошлые кнопки
 
     if (actions.length === 0) {
         actionMenu.classList.add('hidden');
         return;
     }
 
+    // создаём кнопки
     actions.forEach(action => {
-        const button = document.createElement('button');
-        button.className = 'action-button';
-        button.textContent = action.label;
-        button.addEventListener('click', () => {
+        const btn = document.createElement('button');
+        btn.className = 'action-button';
+        btn.textContent = action.label;
+        btn.addEventListener('click', () => {
             action.action();
             hideActionMenu();
         });
-        actionMenu.appendChild(button);
+        actionMenu.appendChild(btn);
     });
 
     const rect = targetElement.getBoundingClientRect();
 
-    // Новое позиционирование — меню справа от элемента
-    actionMenu.style.top = `${rect.top + window.scrollY + rect.height / 2 - actionMenu.offsetHeight / 2}px`; 
-    actionMenu.style.left = `${rect.right + window.scrollX + 10}px`; // немного отступим вправо
+    // временно показываем меню скрытым, чтобы получить размер
+    actionMenu.style.visibility = 'hidden';
+    actionMenu.style.display = 'block';
+    actionMenu.classList.remove('hidden');
 
-    // Чтобы корректно рассчитать offsetHeight, сначала показать элемент невидимым
-    actionMenu.classList.add('hidden');
-    actionMenu.style.display = 'block'; // временно включаем отображение
+    const menuWidth  = actionMenu.offsetWidth;
+    const menuHeight = actionMenu.offsetHeight;
+    const viewportWidth  = window.innerWidth;
+    const viewportHeight = window.innerHeight;
 
-    // После того как браузер прочитал размеры:
-    requestAnimationFrame(() => {
-        actionMenu.style.top = `${rect.top + window.scrollY + rect.height / 2 - actionMenu.offsetHeight / 2}px`;
-        actionMenu.style.left = `${rect.right + window.scrollX + 10}px`;
-        actionMenu.classList.remove('hidden');
-        actionMenu.style.display = ''; // убираем фикс
-    });
+    // рассчитываем вертикальную позицию (центр по высоте элемента)
+    let top = rect.top + window.scrollY + (rect.height / 2) - (menuHeight / 2);
+    // не даём выйти за верх/низ
+    top = Math.max(10, Math.min(top, window.scrollY + viewportHeight - menuHeight - 10));
+
+    // сколько места справа и слева
+    const spaceRight = viewportWidth - (rect.right + 10);
+    const spaceLeft  = rect.left - 10;
+
+    let left;
+    if (spaceRight >= menuWidth) {
+        // достаточно места справа
+        left = rect.right + 10 + window.scrollX;
+    } else if (spaceLeft >= menuWidth) {
+        // ставим слева
+        left = rect.left - menuWidth - 10 + window.scrollX;
+    } else {
+        // мало места с обеих сторон — прижмём к правой границе
+        left = window.scrollX + viewportWidth - menuWidth - 10;
+    }
+
+    // окончательно позиционируем и показываем
+    actionMenu.style.top        = `${top}px`;
+    actionMenu.style.left       = `${left}px`;
+    actionMenu.style.visibility = '';      // вернуть видимость
+    actionMenu.style.display    = '';      // вернуть дефолт
+    actionMenu.classList.remove('hidden');
 }
+
 
 function packAllShishki(zipId) {
     const shishkaItem = inventory['shishka'];
@@ -740,3 +766,12 @@ function cancelDeal() {
         addMessage("bot", "Ну окей, обращайся.");
     }, 1000);
 }
+
+
+window.addEventListener('load', () => {
+    const loader = document.getElementById('loading-screen');
+    // ждем ещё полсекунды, чтобы дать анимации завершиться
+    setTimeout(() => loader.classList.add('loaded'), 5000);
+    // полностью удаляем из DOM
+    setTimeout(() => loader.remove(), 5000);
+  });
