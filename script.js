@@ -879,7 +879,7 @@ function offerPrice(amount) {
         return;
     }
 
-    const pricePerPack = Math.floor(Math.random() * (100000 - 100000) + 100000); 
+    const pricePerPack = Math.floor(Math.random() * (15 - 30) + 15); 
     const totalPrice = pricePerPack * count;
 
     setTimeout(() => {
