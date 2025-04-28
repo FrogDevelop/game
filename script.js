@@ -24,6 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const quantityInput = document.getElementById('quantity');
     const confirmBuyButton = document.getElementById('confirm-buy');
 
+    const darknetButton = document.getElementById('darknet_button');
+    const darknetModal = document.getElementById('darknet-modal');
+    const closeDarknetButton = document.getElementById('close-darknet-modal');
+    const darknetTabs = document.getElementById('darknet-tabs');
+    const darknetTabContent = document.getElementById('darknet-tab-content');
+
     let selectedProduct = null;
 
     let playerMoney = parseInt(localStorage.getItem('playerMoney')) || 1000;
@@ -58,19 +64,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Обновленная структура shopItems
     const shopItems = [
         {
-            id: 'zip', name: 'Зип пакет', price: 100, type: 'zip', image: 'zip.png',
+            id: 'zip', name: 'Зип пакет', price: 5, type: 'zip', image: 'zip.png',
             description: 'Плотный пакет для хранения шишек.', benefit: 'Позволяет расфасовать шишки.', quantitySelectable: true
         },
         {
-            id: 'fertilizer', name: 'Удобрение', price: 200, type: 'fertilizer', image: 'fertilizer.png',
+            id: 'fertilizer', name: 'Удобрение', price: 2000, type: 'fertilizer', image: 'fertilizer.png',
             description: 'Органическое удобрение для ускорения роста кустов.', benefit: 'Ускоряет рост растения.', quantitySelectable: true
         },
         {
-            id: 'plant_food', name: 'Еда для куста', price: 100, type: 'plant_food', image: 'plant_food.png',
+            id: 'plant_food', name: 'Еда для куста', price: 5000, type: 'plant_food', image: 'plant_food.png',
             description: 'Специальное питание для растения.', benefit: 'Повышает урожайность.', quantitySelectable: true
         },
         {
-            id: 'light', name: 'Лампа для роста', price: 300, type: 'light', image: 'light.png',
+            id: 'light', name: 'Лампа для роста', price: 3000, type: 'light', image: 'light.png',
             description: 'Дополнительный свет для ускоренного роста.', benefit: 'Увеличивает скорость роста.', quantitySelectable: false
         }
     ];
@@ -145,10 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
             actions.push({ label: 'Расфасовать все', action: () => packAllShishki(itemId) });
         }
     
-        if (item.type === 'packed_product') {
-            actions.push({ label: 'Продать', action: () => sellZip(itemId) });
-        }
-    
         showActionMenu(actions, targetElement);
     }
     
@@ -206,17 +208,6 @@ document.addEventListener('DOMContentLoaded', () => {
             updateInventory();
         } else {
             alert('Не хватает шишек или zip пакетов!');
-        }
-    }
-
-    function sellZip(itemId) {
-        if (inventory[itemId]?.count >= 1) {
-            playerMoney += 300;
-            decreaseItem(itemId, 1);
-            localStorage.setItem('playerMoney', playerMoney);
-            updateInventory();
-
-            updateMoneyDisplay(); 
         }
     }
 
@@ -593,136 +584,59 @@ document.getElementById('close-shop-button').addEventListener('click', function(
     }
 });
 
-// Открытие и закрытие модального окна
-const openDarknetModal = () => {
-    const modal = document.getElementById('darknet-modal');
-    modal.classList.add('open');
-};
 
-const closeDarknetModal = () => {
-    const modal = document.getElementById('darknet-modal');
-    modal.classList.remove('open');
-};
+//____________________________________________________________________________________________ ДАРКНЕТ
 
-// Обработчик для вкладок
-const tabs = document.querySelectorAll('.tab-button');
-const tabContent = document.getElementById('darknet-tab-content');
+// ——— Darknet ———
+const darknetButton       = document.getElementById('darknet-button');
+const darknetModal        = document.getElementById('darknet-modal');
+const closeDarknetButton  = document.getElementById('close-darknet-modal');
+const tabButtons          = document.querySelectorAll('#darknet-tabs .tab-button');
+const panels              = document.querySelectorAll('#darknet-tab-content .tab-panel');
+const chatWindow          = document.getElementById('chat-window');
+const messageInput        = document.getElementById('message-input');
+const sendMessageButton   = document.getElementById('send-message-button');
 
-tabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-        tabs.forEach(t => t.classList.remove('active')); // Убираем активный класс у всех вкладок
-        this.classList.add('active'); // Добавляем активный класс текущей вкладке
-        
-        tabContent.innerHTML = ''; // Очистка контента
+// Открыть/закрыть Darknet
+if (darknetButton && darknetModal) {
+  darknetButton.addEventListener('click', () => darknetModal.classList.add('open'));
+}
+if (closeDarknetButton && darknetModal) {
+  closeDarknetButton.addEventListener('click', () => darknetModal.classList.remove('open'));
+}
 
-        // Добавление контента для выбранной вкладки
-        switch (this.id) {
-            case 'tab-1':
-                tabContent.innerHTML = '<h3>Продажа товаров</h3><p>Здесь будет информация о товарах, которые можно продать.</p>';
-                break;
-            case 'tab-2':
-                tabContent.innerHTML = '<h3>Магазины</h3><p>Здесь будут отображаться магазины Darknet.</p>';
-                break;
-            case 'tab-3':
-                tabContent.innerHTML = '<h3>История</h3><p>Здесь будет отображаться история ваших действий.</p>';
-                break;
-        }
-    });
+// Переключение вкладок
+tabButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    // активный таб
+    tabButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // панели
+    panels.forEach(p => p.classList.remove('active'));
+    const panel = document.getElementById(`${btn.id}-content`);
+    if (panel) panel.classList.add('active');
+  });
 });
 
-// Закрытие модального окна при клике на крестик
-document.getElementById('close-darknet-modal').addEventListener('click', closeDarknetModal);
-
-// Пример открытия модального окна (например, кнопка для открытия)
-document.getElementById('darknet-button').addEventListener('click', openDarknetModal);
-
-document.addEventListener('DOMContentLoaded', function () {
-    const tabs = document.querySelectorAll('.tab-button');
-    const tabContent = document.getElementById('darknet-tab-content');
-    const chatWindow = document.getElementById('chat-window');
-    const sendButton = document.getElementById('send-message-button');
-    const messageInput = document.getElementById('message-input');
-    const sellButton = document.getElementById('sell-button');
-    const amountInput = document.getElementById('amount');
-    const offerSection = document.getElementById('offer-section');
-    const offerPrice = document.getElementById('offer-price');
-    const acceptButton = document.getElementById('accept-button');
-    const declineButton = document.getElementById('decline-button');
-
-    // Сначала отображаем чат и сообщение от скупщика
-    function sendMessageToBuyer(message, type = 'incoming') {
-        const newMessage = document.createElement('div');
-        newMessage.classList.add('message', type);
-        newMessage.innerHTML = `
-            <div class="message-header">
-                <img src="avatar1.png" alt="Buyer Avatar" class="avatar">
-                <span class="username">Скупщик</span>
-                <span class="timestamp">${new Date().toLocaleTimeString()}</span>
-            </div>
-            <div class="message-body">
-                <p>${message}</p>
-            </div>
-        `;
-        chatWindow.appendChild(newMessage);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
-
-    // Инициализируем чат с скупщиком
-    sendMessageToBuyer("Привет, готов толкнуть тебе стаф.");
-    sendMessageToBuyer("Сколько у тебя есть?");
-
-    // Обработка ввода количества пакетов
-    sellButton.addEventListener('click', function () {
-        const amount = amountInput.value.trim();
-        if (amount) {
-            // Вычисление цены
-            const basePricePerUnit = 20; // $20 за пакетик
-            let totalPrice = basePricePerUnit * parseInt(amount);
-
-            // Генерация случайной изменения цены от скупщика
-            const priceVariation = (Math.random() - 0.5) * 0.2; // Изменение цены на +/- 20%
-            totalPrice += totalPrice * priceVariation;
-            totalPrice = totalPrice.toFixed(2);
-
-            // Отправляем предложение скупщика
-            offerPrice.textContent = `Цена: $${totalPrice} за ${amount} пакетов.`;
-            offerSection.classList.remove('hidden');
-        } else {
-            alert("Пожалуйста, укажите количество пакетов.");
-        }
-    });
-
-    // Кнопка "Согласиться"
-    acceptButton.addEventListener('click', function () {
-        sendMessageToBuyer(`Согласен, продаю ${amountInput.value.trim()} пакетов.`);
-        offerSection.classList.add('hidden');
-    });
-
-    // Кнопка "Отказаться"
-    declineButton.addEventListener('click', function () {
-        sendMessageToBuyer("Нет, не устраивает цена.");
-        offerSection.classList.add('hidden');
-    });
-
-    // Отправка сообщений с пользователем
-    sendButton.addEventListener('click', function () {
-        const messageText = messageInput.value.trim();
-        if (messageText) {
-            const newMessage = document.createElement('div');
-            newMessage.classList.add('message', 'outgoing');
-            newMessage.innerHTML = `
-                <div class="message-header">
-                    <img src="avatar2.png" alt="User Avatar" class="avatar">
-                    <span class="username">Ты</span>
-                    <span class="timestamp">${new Date().toLocaleTimeString()}</span>
-                </div>
-                <div class="message-body">
-                    <p>${messageText}</p>
-                </div>
-            `;
-            chatWindow.appendChild(newMessage);
-            messageInput.value = ''; // Очистить поле ввода
-            chatWindow.scrollTop = chatWindow.scrollHeight; // Прокрутить чат вниз
-        }
-    });
-});
+// Чат: отправка и простой ответ
+if (sendMessageButton && messageInput && chatWindow) {
+  sendMessageButton.addEventListener('click', () => {
+    const text = messageInput.value.trim();
+    if (!text) return;
+    // своё сообщение
+    const out = document.createElement('div');
+    out.className = 'message outgoing';
+    out.innerHTML = `<div class="message-body"><p>${text}</p></div>`;
+    chatWindow.appendChild(out);
+    messageInput.value = '';
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+    // эмуляция ответа
+    setTimeout(() => {
+      const inMsg = document.createElement('div');
+      inMsg.className = 'message incoming';
+      inMsg.innerHTML = `<div class="message-body"><p>Сколько у тебя есть?</p></div>`;
+      chatWindow.appendChild(inMsg);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }, 800);
+  });
+}

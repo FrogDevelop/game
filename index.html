@@ -36,11 +36,9 @@
         <div class="shop-content">
             <button class="close-shop-button" id="close-shop-button">&times;</button>
             <div class="shop-items">
-                <!-- Сюда будут добавляться товары через JS -->
             </div>
         </div>
     </div>
-    
 
     <div id="inventory-modal" class="inventory-modal">
         <div class="inventory-content">
@@ -49,13 +47,7 @@
         </div>
     </div>
 
-    <footer>
-        <div class="menu">
-            <button class="menu_button" id="shop_button"><img src="shop.png" alt="" style="height: 40px; width: 40px;"></button>
-            <button class="menu_button" id="darknet-button"><img src="laptop.png" alt=""></button>
-            <button class="menu_button" id="inventar_button"><img src="inventar.png" alt=""></button>
-        </div>
-    </footer>
+    <div id="action-menu" class="action-menu hidden"></div>
 
     <div id="product-modal" class="modal">
         <div class="modal-content">
@@ -65,7 +57,6 @@
             <p id="product-description"></p>
             <p id="product-benefit"></p>
             <p id="product-price"></p>
-    
             <div id="quantity-container" style="display:block; margin-top:10px;">
                 <label for="quantity">Количество:</label>
                 <div id="quantity-controls">
@@ -74,61 +65,58 @@
                     <button id="increase-quantity" class="quantity-button">+</button>
                 </div>
             </div>
-    
             <button id="confirm-buy" style="margin-top:15px;">Купить</button>
         </div>
     </div>
-          
-      <div id="action-menu" class="action-menu hidden"></div>
 
-      <div id="darknet-modal" class="modal">
-        <div class="modal-content">
-            <span id="close-darknet-modal" class="close-darknet-button">&times;</span>
-            <h2>Добро пожаловать в Darknet</h2>
-            
-            <div id="darknet-tabs" class="darknet-tabs">
-                <button class="tab-button" id="tab-1">Продажа</button>
-                <button class="tab-button" id="tab-2">Магазин</button>
-                <button class="tab-button" id="tab-3">История</button>
+    <div id="darknet-modal" class="modal">
+        <div class="darknet-content">
+            <span id="close-darknet-modal" class="close-button">&times;</span>
+            <h2>Darknet</h2>
+    
+            <!-- Навигация -->
+            <div id="darknet-tabs">
+                <button class="tab-button active" data-tab="chat">
+                    <img src="chat-icon.png" alt="Chat Icon">
+                    Чат
+                </button>
+                <button class="tab-button" data-tab="darkstore">
+                    <img src="store-icon.png" alt="Store Icon">
+                    Dark Store
+                </button>
             </div>
     
+            <!-- Контент табов -->
             <div id="darknet-tab-content">
-                <div id="tab-1-content" class="tab-panel active">
-                    <h3>Продажа пакетов с шишками</h3>
-            
-                    <!-- Чат -->
+                <!-- Чат -->
+                <div class="tab-panel active" data-panel="chat">
                     <div id="chat-window">
-                        <!-- Сообщения будут добавляться сюда через JS -->
+                        <!-- Сообщения будут добавляться динамически -->
                     </div>
-            
-                    <!-- Форма для продажи пакетов с шишками -->
-                    <div class="input-area">
-                        <input type="text" id="message-input" placeholder="Напишите сообщение...">
-                        <button id="send-message-button">Отправить</button>
+                    <div id="input-area">
+                        <input type="text" id="chat-input" placeholder="Введите сообщение...">
+                        <button id="send-chat">Отправить</button>
                     </div>
-            
-                    <!-- Кнопка для начала продажи -->
-                    <div class="product-form">
-                        <h4>Продайте пакеты с шишками:</h4>
-                        <input type="number" id="amount" placeholder="Количество пакетов" min="1" required>
-                        <input type="number" id="price" placeholder="Цена за пакет" min="1" required>
-                        <button id="sell-button">Продать</button>
+                </div>
+    
+                <!-- Dark Store -->
+                <div class="tab-panel" data-panel="darkstore">
+                    <div id="darkstore-items">
+                        <!-- Здесь будет список товаров -->
                     </div>
                 </div>
             </div>
-            
-            
         </div>
     </div>
     
-    
+
+    <footer>
+        <div class="menu">
+            <button class="menu_button" id="shop_button"><img src="shop.png" alt="" style="height: 40px; width: 40px;"></button>
+            <button class="menu_button" id="darknet-button"><img src="laptop.png" alt=""></button>
+            <button class="menu_button" id="inventar_button"><img src="inventar.png" alt=""></button>
         </div>
-    </div>
-    
-    
-    
-    
-      
+    </footer>
     <script src="script.js"></script>
 </body>
 </html>
