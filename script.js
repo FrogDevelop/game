@@ -6,6 +6,13 @@ let shishCount = parseInt(localStorage.getItem('shishCount')) || 0;
 let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
 let inventoryItems; 
 
+// === Активные бафы для растений ===
+let growthBoostActive = false;    // Ускорение роста шишек
+let yieldBoostActive = false;     // Больше шишек за сбор
+let rareHarvestActive = false;    // Шанс редкого урожая
+let superFoodActive = false;      // Шанс редких шишек
+
+
 let selectedProduct = null;
 let quantity = 1; // глобальная переменная для количества
 // Обновляем отображение денег
@@ -90,6 +97,9 @@ function getItemImage(id) {
         case 'plant_food': return 'plant_food.png';
         case 'pot': return 'pot.png';
         case 'light': return 'light.png';
+        case 'booster': return 'booster.png';
+        case 'rare_fertilizer': return 'rare_fertilizer.png';
+        case 'super_food': return 'super_food.png';
         default: return 'bud.png';
     }
 }
@@ -100,6 +110,25 @@ function openItemActions(itemId, targetElement) {
 
     let actions = [];
 
+    if (item.type === 'fertilizer') {
+        actions.push({ label: 'Применить удобрение', action: () => applyFertilizer(itemId) });
+    }
+
+    if (item.type === 'plant_food') {
+        actions.push({ label: 'Применить еду для куста', action: () => applyPlantFood(itemId) });
+    }
+
+    if (item.type === 'booster') {
+        actions.push({ label: 'Применить стимулятор роста', action: () => applyBooster(itemId) });
+    }
+
+    if (item.type === 'rare_fertilizer') {
+        actions.push({ label: 'Применить редкий удобритель', action: () => applyRareFertilizer(itemId) });
+    }
+
+    if (item.type === 'super_food') {
+        actions.push({ label: 'Применить супер-питание', action: () => applySuperFood(itemId) });
+    }
     if (item.type === 'fertilizer') {
         actions.push({ label: 'Применить', action: () => applyFertilizer(itemId) });
     }
@@ -113,9 +142,65 @@ function openItemActions(itemId, targetElement) {
 }
 
 function applyFertilizer(itemId) {
-    alert('Удобрение применено!');
+    alert('Удобрение применено! Немного ускоряет рост кустов.');
+    growthBoostActive = true;
+
     decreaseItem(itemId, 1);
+
+    setTimeout(() => {
+        growthBoostActive = false;
+        console.log('Эффект удобрения закончился.');
+    }, 300000); // Эффект на 5 минут
 }
+
+function applyPlantFood(itemId) {
+    alert('Еда для куста применена! Повышена урожайность.');
+    yieldBoostActive = true;
+
+    decreaseItem(itemId, 1);
+
+    setTimeout(() => {
+        yieldBoostActive = false;
+        console.log('Эффект еды для куста закончился.');
+    }, 300000); // Эффект на 5 минут
+}
+
+function applyBooster(itemId) {
+    alert('Стимулятор роста активирован! Шишки растут быстрее.');
+    growthBoostActive = true;
+
+    decreaseItem(itemId, 1);
+
+    setTimeout(() => {
+        growthBoostActive = false;
+        console.log('Эффект стимулятора роста закончился.');
+    }, 300000); // Эффект на 5 минут
+}
+
+function applyRareFertilizer(itemId) {
+    alert('Редкий удобритель использован! Возможность двойного урожая.');
+    rareHarvestActive = true;
+
+    decreaseItem(itemId, 1);
+
+    setTimeout(() => {
+        rareHarvestActive = false;
+        console.log('Эффект редкого удобрителя закончился.');
+    }, 300000); // Эффект на 5 минут
+}
+
+function applySuperFood(itemId) {
+    alert('Супер-питание применено! Шанс получить редкие шишки.');
+    superFoodActive = true;
+
+    decreaseItem(itemId, 1);
+
+    setTimeout(() => {
+        superFoodActive = false;
+        console.log('Эффект супер-питания закончился.');
+    }, 300000); // Эффект на 5 минут
+}
+
 
 function packShishki(zipId) {
     if (inventory['shishka']?.count >= 5 && inventory[zipId]?.count >= 1) {
@@ -389,21 +474,35 @@ document.addEventListener('DOMContentLoaded', () => {
             bud.style.transform = 'scale(0)';
             bud.style.opacity = '0';
     
-            shishCount++;
+            let harvestedCount = 1;
+    
+            // Баф на урожайность
+            if (yieldBoostActive) {
+                harvestedCount += 1; // +1 шишка
+            }
+    
+            // Баф на редкий урожай
+            if (rareHarvestActive && Math.random() < 0.2) { 
+                harvestedCount += 1; // 20% шанс ещё +1 шишка
+            }
+    
+            // Если активирован супер-питание (можно позже добавить редкие шишки)
+    
             if (!inventory['shishka']) {
                 inventory['shishka'] = { count: 0, type: 'product', name: 'Шишка' };
             }
-            inventory['shishka'].count++;
+            inventory['shishka'].count += harvestedCount;
     
             localStorage.setItem('shishCount', shishCount);
             saveInventory();
-            updateInventory(); // <<< добавили
+            updateInventory(); 
     
             setTimeout(() => {
                 showBud(bud);
-            }, 5000);
+            }, growthBoostActive ? 3000 : 5000); // Ускорение роста, если есть стимул
         }, 1000);
     }
+    
     
 
     buds.forEach(bud => {
@@ -780,7 +879,7 @@ function offerPrice(amount) {
         return;
     }
 
-    const pricePerPack = Math.floor(Math.random() * (25 - 18) + 18); 
+    const pricePerPack = Math.floor(Math.random() * (100000 - 100000) + 100000); 
     const totalPrice = pricePerPack * count;
 
     setTimeout(() => {

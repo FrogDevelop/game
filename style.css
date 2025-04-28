@@ -63,8 +63,9 @@
   
 header{
     position: absolute;
-    padding-top: 100px;
-    right: 15px;
+    top: 50px;
+    left: 52%;
+    transform: translate(-50%);
     color: white;
     font-family: "Cal Sans", sans-serif;
     font-weight: 500;
@@ -104,7 +105,7 @@ footer {
     bottom: 0;
     width: 100%;
     height: 60px;
-    background: linear-gradient(0deg, rgba(0, 0, 0, 0.7));
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.537));
     z-index: 10;
 }
 
@@ -146,8 +147,8 @@ footer {
 }
 
 .plant img {
-    height: 66vh;
-    max-height: 700px;
+    height: 60vh;
+    max-height: 800px;
     width: auto;
 }
 
@@ -224,11 +225,11 @@ footer {
     }
 }
 
-.bud1 { top: 30%; left: 45%; }
-.bud2 { top: 48%; left: 45%; }
-.bud3 { top: 59%; left: 33%; }
-.bud4 { top: 59%; left: 54%; }
-.bud5 { top: 65%; left: 45%; }
+.bud1 { top: 34%; left: 45%; }
+.bud2 { top: 51%; left: 45%; }
+.bud3 { top: 60%; left: 34%; }
+.bud4 { top: 60%; left: 54%; }
+.bud5 { top: 67%; left: 45%; }
 
 .leaf {
     width: 12px; 
@@ -406,7 +407,7 @@ footer {
     gap: 15px;
     overflow-y: auto;
     width: auto;
-    height: 60vh;
+    height: 30vh;
     max-height: 70vh;
     margin-top: 10px;
     -webkit-tap-highlight-color: transparent;
@@ -817,9 +818,9 @@ a:focus {
 
 .phone-frame {
     background: #222;
-    width: 90%;
+    width: 85%;
     max-width: 400px;
-    height: 90%;
+    height: 85%;
     border-radius: 30px;
     overflow: hidden;
     display: flex;
