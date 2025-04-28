@@ -294,22 +294,77 @@ document.addEventListener('DOMContentLoaded', () => {
     // Обновленная структура shopItems
     const shopItems = [
         {
-            id: 'zip', name: 'Зип пакет', price: 5, type: 'zip', image: 'zip.png',
-            description: 'Плотный пакет для хранения шишек.', benefit: 'Позволяет расфасовать шишки.', quantitySelectable: true
+            id: 'zip', 
+            name: 'Зип пакет', 
+            price: 5, 
+            type: 'zip', 
+            image: 'zip.png',
+            description: 'Плотный пакет для хранения шишек.', 
+            benefit: 'Позволяет расфасовать шишки.', 
+            quantitySelectable: true
         },
         {
-            id: 'fertilizer', name: 'Удобрение', price: 2000, type: 'fertilizer', image: 'fertilizer.png',
-            description: 'Органическое удобрение для ускорения роста кустов.', benefit: 'Ускоряет рост растения.', quantitySelectable: true
+            id: 'fertilizer', 
+            name: 'Удобрение', 
+            price: 2000, 
+            type: 'fertilizer', 
+            image: 'fertilizer.png',
+            description: 'Органическое удобрение для ускорения роста кустов.', 
+            benefit: 'Ускоряет рост растения.', 
+            quantitySelectable: true
         },
         {
-            id: 'plant_food', name: 'Еда для куста', price: 5000, type: 'plant_food', image: 'plant_food.png',
-            description: 'Специальное питание для растения.', benefit: 'Повышает урожайность.', quantitySelectable: true
+            id: 'plant_food', 
+            name: 'Еда для куста', 
+            price: 5000, 
+            type: 'plant_food', 
+            image: 'plant_food.png',
+            description: 'Специальное питание для растения.', 
+            benefit: 'Повышает урожайность.', 
+            quantitySelectable: true
         },
         {
-            id: 'light', name: 'Лампа для роста', price: 3000, type: 'light', image: 'light.png',
-            description: 'Дополнительный свет для ускоренного роста.', benefit: 'Увеличивает скорость роста.', quantitySelectable: false
+            id: 'light', 
+            name: 'Лампа для роста', 
+            price: 3000, 
+            type: 'light', 
+            image: 'light.png',
+            description: 'Дополнительный свет для ускоренного роста.', 
+            benefit: 'Увеличивает скорость роста.', 
+            quantitySelectable: false
+        },
+        {
+            id: 'booster', 
+            name: 'Стимулятор роста', 
+            price: 4000, 
+            type: 'booster', 
+            image: 'booster.png', 
+            description: 'Препарат для ускорения процессов роста.', 
+            benefit: 'Уменьшает время между сборами.', 
+            quantitySelectable: true
+        },
+        {
+            id: 'rare_fertilizer', 
+            name: 'Редкий удобритель', 
+            price: 6000, 
+            type: 'rare_fertilizer', 
+            image: 'rare_fertilizer.png', 
+            description: 'Эксклюзивный продукт для максимального эффекта.', 
+            benefit: 'Шанс на двойной урожай.', 
+            quantitySelectable: true
+        },
+        {
+            id: 'super_food', 
+            name: 'Супер-питание', 
+            price: 7000, 
+            type: 'super_food', 
+            image: 'super_food.png', 
+            description: 'Легендарная добавка для растений.', 
+            benefit: 'Шанс получить редкие шишки.', 
+            quantitySelectable: true
         }
     ];
+    
     // Скрытие меню при клике вне его
 
     function showBud(bud) {
