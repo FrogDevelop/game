@@ -69,51 +69,33 @@
         </div>
     </div>
 
-    <div id="darknet-modal" class="modal">
-        <div class="darknet-content">
-            <span id="close-darknet-modal" class="close-button">&times;</span>
-            <h2>Darknet</h2>
-    
-            <!-- Навигация -->
-            <div id="darknet-tabs">
-                <button class="tab-button active" data-tab="chat">
-                    <img src="chat-icon.png" alt="Chat Icon">
-                    Чат
-                </button>
-                <button class="tab-button" data-tab="darkstore">
-                    <img src="store-icon.png" alt="Store Icon">
-                    Dark Store
-                </button>
-            </div>
-    
-            <!-- Контент табов -->
-            <div id="darknet-tab-content">
-                <!-- Чат -->
-                <div class="tab-panel active" data-panel="chat">
-                    <div id="chat-window">
-                        <!-- Сообщения будут добавляться динамически -->
-                    </div>
-                    <div id="input-area">
-                        <input type="text" id="chat-input" placeholder="Введите сообщение...">
-                        <button id="send-chat">Отправить</button>
-                    </div>
-                </div>
-    
-                <!-- Dark Store -->
-                <div class="tab-panel" data-panel="darkstore">
-                    <div id="darkstore-items">
-                        <!-- Здесь будет список товаров -->
-                    </div>
-                </div>
+<!-- Окно телефона -->
+<div id="messenger-modal" class="messenger-modal">
+    <div class="phone-frame">
+        <div class="messenger-header">
+            <span id="close-messenger" class="close-button">&times;</span>
+            <h2>Чаты</h2>
+        </div>
+        <div id="chat-list" class="chat-list">
+            <div class="chat-item" id="uncle-redji">
+                <img src="uncle.png" alt="Дядя Реджи" class="avatar">
+                <span>Дядя Реджи</span>
             </div>
         </div>
+
+        <div id="chat-window" class="chat-window hidden">
+            <div id="messages" class="messages"></div>
+            <div id="reply-buttons" class="reply-buttons"></div>
+        </div>
     </div>
+</div>
+
     
 
     <footer>
         <div class="menu">
             <button class="menu_button" id="shop_button"><img src="shop.png" alt="" style="height: 40px; width: 40px;"></button>
-            <button class="menu_button" id="darknet-button"><img src="laptop.png" alt=""></button>
+            <button class="menu_button" id="darknet_button"><img src="laptop.png" alt=""></button>
             <button class="menu_button" id="inventar_button"><img src="inventar.png" alt=""></button>
         </div>
     </footer>

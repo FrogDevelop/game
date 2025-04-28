@@ -1,9 +1,225 @@
+// Глобальные переменные
+let playerMoney = parseInt(localStorage.getItem('playerMoney')) || 1000;
+let shishCount = parseInt(localStorage.getItem('shishCount')) || 0;
+let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
+let inventoryItems; 
+
+let selectedProduct = null;
+
+// Обновляем отображение денег
+const moneyDisplay = document.querySelector('.money');
+
+function updateMoneyDisplay() {
+    if (moneyDisplay) {
+        // Плавное изменение значения денег с анимацией
+        const currentAmount = parseInt(moneyDisplay.textContent);
+        const diff = playerMoney - currentAmount;
+        const duration = 500;
+        let startTime = null;
+        
+        function animateMoney(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const progress = timestamp - startTime;
+            const progressRatio = Math.min(progress / duration, 1);
+            moneyDisplay.textContent = currentAmount + Math.round(diff * progressRatio);
+            if (progress < duration) {
+                window.requestAnimationFrame(animateMoney);
+            }
+        }
+
+        window.requestAnimationFrame(animateMoney);
+    }
+}
+
+function updateInventory() {
+    inventoryItems.innerHTML = '';
+    let itemCount = 0;
+
+    for (const [id, data] of Object.entries(inventory)) {
+        if (itemCount >= 15) break;
+
+        const itemElement = document.createElement('div');
+        itemElement.classList.add('inventory-item');
+        itemElement.dataset.itemId = id;
+
+        const itemImage = document.createElement('img');
+        itemImage.src = getItemImage(id);
+        itemImage.alt = data?.name || ''; 
+
+        const itemCountElement = document.createElement('div');
+        itemCountElement.classList.add('item-count');
+        if (typeof data === 'object' && data !== null && 'count' in data) {
+            itemCountElement.textContent = `x${data.count}`;
+        } else {
+            itemCountElement.textContent = 'x0';
+        }
+
+        itemElement.appendChild(itemImage);
+        itemElement.appendChild(itemCountElement);
+        inventoryItems.appendChild(itemElement);
+
+        itemElement.addEventListener('click', () => {
+            openItemActions(id, event.currentTarget);
+        });
+
+        itemCount++;
+    }
+
+    while (itemCount < 15) {
+        const itemElement = document.createElement('div');
+        itemElement.classList.add('inventory-item');
+        inventoryItems.appendChild(itemElement);
+        itemCount++;
+    }
+}
+
+function getItemImage(id) {
+    switch (id) {
+        case 'shishka': return 'bud.png';
+        case 'fertilizer': return 'fertilizer.png';
+        case 'zip': return 'zip.png';
+        case 'zip_shishka': return 'zip_shishka.png';
+        case 'plant_food': return 'plant_food.png';
+        case 'pot': return 'pot.png';
+        case 'light': return 'light.png';
+        default: return 'bud.png';
+    }
+}
+
+function openItemActions(itemId, targetElement) {
+    const item = inventory[itemId];
+    if (!item) return;
+
+    let actions = [];
+
+    if (item.type === 'fertilizer') {
+        actions.push({ label: 'Применить', action: () => applyFertilizer(itemId) });
+    }
+
+    if (item.type === 'zip' && inventory['shishka']?.count >= 5) {
+        actions.push({ label: 'Расфасовать', action: () => packShishki(itemId) });
+        actions.push({ label: 'Расфасовать все', action: () => packAllShishki(itemId) });
+    }
+
+    showActionMenu(actions, targetElement);
+}
+
+function applyFertilizer(itemId) {
+    alert('Удобрение применено!');
+    decreaseItem(itemId, 1);
+}
+
+function packShishki(zipId) {
+    if (inventory['shishka']?.count >= 5 && inventory[zipId]?.count >= 1) {
+        decreaseItem('shishka', 5);
+        decreaseItem(zipId, 1);
+
+        if (!inventory['zip_shishka']) {
+            inventory['zip_shishka'] = { count: 0, type: 'packed_product', name: 'Zip с шишкой' };
+        }
+        inventory['zip_shishka'].count += 1;
+
+        saveInventory();
+        updateInventory();
+    } else {
+        alert('Не хватает шишек или zip пакетов!');
+    }
+}
+
+function showActionMenu(actions, targetElement) {
+    const actionMenu = document.getElementById('action-menu');
+    actionMenu.innerHTML = ''; // Очищаем старые кнопки
+
+    if (actions.length === 0) {
+        actionMenu.classList.add('hidden');
+        return;
+    }
+
+    actions.forEach(action => {
+        const button = document.createElement('button');
+        button.className = 'action-button';
+        button.textContent = action.label;
+        button.addEventListener('click', () => {
+            action.action();
+            hideActionMenu();
+        });
+        actionMenu.appendChild(button);
+    });
+
+    const rect = targetElement.getBoundingClientRect();
+
+    // Новое позиционирование — меню справа от элемента
+    actionMenu.style.top = `${rect.top + window.scrollY + rect.height / 2 - actionMenu.offsetHeight / 2}px`; 
+    actionMenu.style.left = `${rect.right + window.scrollX + 10}px`; // немного отступим вправо
+
+    // Чтобы корректно рассчитать offsetHeight, сначала показать элемент невидимым
+    actionMenu.classList.add('hidden');
+    actionMenu.style.display = 'block'; // временно включаем отображение
+
+    // После того как браузер прочитал размеры:
+    requestAnimationFrame(() => {
+        actionMenu.style.top = `${rect.top + window.scrollY + rect.height / 2 - actionMenu.offsetHeight / 2}px`;
+        actionMenu.style.left = `${rect.right + window.scrollX + 10}px`;
+        actionMenu.classList.remove('hidden');
+        actionMenu.style.display = ''; // убираем фикс
+    });
+}
+
+function packAllShishki(zipId) {
+    const shishkaItem = inventory['shishka'];
+    const zipItem = inventory[zipId];
+
+    if (!shishkaItem || !zipItem) {
+        alert('Нет шишек или zip пакетов!');
+        return;
+    }
+
+    const availableShishki = shishkaItem.count;
+    const availableZips = zipItem.count;
+
+    const maxPackable = Math.min(Math.floor(availableShishki / 5), availableZips);
+
+    if (maxPackable === 0) {
+        alert('Не хватает шишек или zip пакетов для расфасовки!');
+        return;
+    }
+
+    // Уменьшаем количество шишек и пакетов
+    decreaseItem('shishka', maxPackable * 5);
+    decreaseItem(zipId, maxPackable);
+
+    // Добавляем расфасованные zip с шишкой
+    if (!inventory['zip_shishka']) {
+        inventory['zip_shishka'] = { count: 0, type: 'packed_product', name: 'Zip с шишкой' };
+    }
+    inventory['zip_shishka'].count += maxPackable;
+
+    saveInventory();
+    updateInventory();
+}
+
+function decreaseItem(itemId, amount) {
+    if (inventory[itemId]) {
+        inventory[itemId].count -= amount;
+        if (inventory[itemId].count <= 0) {
+            delete inventory[itemId];
+        }
+        saveInventory();
+        updateInventory();
+    }
+}
+
+function saveInventory() {
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // === Все твои текущие переменные остаются без изменений ===
     const inventoryBtn = document.getElementById('inventar_button');
     const inventoryModal = document.getElementById('inventory-modal');
     const closeModalBtn = document.getElementById('close-inventory');
-    const inventoryItems = document.querySelector('.inventory-items');
+    inventoryItems = document.querySelector('.inventory-items');
+
 
     const shopButton = document.getElementById('shop_button');
     const shopModal = document.getElementById('shop-modal');
@@ -24,42 +240,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const quantityInput = document.getElementById('quantity');
     const confirmBuyButton = document.getElementById('confirm-buy');
 
-    const darknetButton = document.getElementById('darknet_button');
-    const darknetModal = document.getElementById('darknet-modal');
-    const closeDarknetButton = document.getElementById('close-darknet-modal');
-    const darknetTabs = document.getElementById('darknet-tabs');
-    const darknetTabContent = document.getElementById('darknet-tab-content');
+    document.getElementById('darknet_button').addEventListener('click', openMessenger);
 
-    let selectedProduct = null;
-
-    let playerMoney = parseInt(localStorage.getItem('playerMoney')) || 1000;
-    let shishCount = parseInt(localStorage.getItem('shishCount')) || 0;
-    let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
-
-    // Обновляем отображение денег
-    const moneyDisplay = document.querySelector('.money');
-    
-    function updateMoneyDisplay() {
-        if (moneyDisplay) {
-            // Плавное изменение значения денег с анимацией
-            const currentAmount = parseInt(moneyDisplay.textContent);
-            const diff = playerMoney - currentAmount;
-            const duration = 500;
-            let startTime = null;
-            
-            function animateMoney(timestamp) {
-                if (!startTime) startTime = timestamp;
-                const progress = timestamp - startTime;
-                const progressRatio = Math.min(progress / duration, 1);
-                moneyDisplay.textContent = currentAmount + Math.round(diff * progressRatio);
-                if (progress < duration) {
-                    window.requestAnimationFrame(animateMoney);
-                }
-            }
-
-            window.requestAnimationFrame(animateMoney);
-        }
-    }
 
     // Обновленная структура shopItems
     const shopItems = [
@@ -80,190 +262,9 @@ document.addEventListener('DOMContentLoaded', () => {
             description: 'Дополнительный свет для ускоренного роста.', benefit: 'Увеличивает скорость роста.', quantitySelectable: false
         }
     ];
-
-    function updateInventory() {
-        inventoryItems.innerHTML = '';
-        let itemCount = 0;
-    
-        for (const [id, data] of Object.entries(inventory)) {
-            if (itemCount >= 15) break;
-    
-            const itemElement = document.createElement('div');
-            itemElement.classList.add('inventory-item');
-            itemElement.dataset.itemId = id;
-    
-            const itemImage = document.createElement('img');
-            itemImage.src = getItemImage(id);
-            itemImage.alt = data?.name || ''; 
-    
-            const itemCountElement = document.createElement('div');
-            itemCountElement.classList.add('item-count');
-            if (typeof data === 'object' && data !== null && 'count' in data) {
-                itemCountElement.textContent = `x${data.count}`;
-            } else {
-                itemCountElement.textContent = 'x0';
-            }
-    
-            itemElement.appendChild(itemImage);
-            itemElement.appendChild(itemCountElement);
-            inventoryItems.appendChild(itemElement);
-    
-            itemElement.addEventListener('click', () => {
-                openItemActions(id, event.currentTarget);
-            });
-    
-            itemCount++;
-        }
-    
-        while (itemCount < 15) {
-            const itemElement = document.createElement('div');
-            itemElement.classList.add('inventory-item');
-            inventoryItems.appendChild(itemElement);
-            itemCount++;
-        }
-    }
-    
-    function getItemImage(id) {
-        switch (id) {
-            case 'shishka': return 'bud.png';
-            case 'fertilizer': return 'fertilizer.png';
-            case 'zip': return 'zip.png';
-            case 'zip_shishka': return 'zip_shishka.png';
-            case 'plant_food': return 'plant_food.png';
-            case 'pot': return 'pot.png';
-            case 'light': return 'light.png';
-            default: return 'bud.png';
-        }
-    }
-
-    function openItemActions(itemId, targetElement) {
-        const item = inventory[itemId];
-        if (!item) return;
-    
-        let actions = [];
-    
-        if (item.type === 'fertilizer') {
-            actions.push({ label: 'Применить', action: () => applyFertilizer(itemId) });
-        }
-    
-        if (item.type === 'zip' && inventory['shishka']?.count >= 5) {
-            actions.push({ label: 'Расфасовать', action: () => packShishki(itemId) });
-            actions.push({ label: 'Расфасовать все', action: () => packAllShishki(itemId) });
-        }
-    
-        showActionMenu(actions, targetElement);
-    }
-    
-    
-    function packAllShishki(zipId) {
-        const shishkaItem = inventory['shishka'];
-        const zipItem = inventory[zipId];
-    
-        if (!shishkaItem || !zipItem) {
-            alert('Нет шишек или zip пакетов!');
-            return;
-        }
-    
-        const availableShishki = shishkaItem.count;
-        const availableZips = zipItem.count;
-    
-        const maxPackable = Math.min(Math.floor(availableShishki / 5), availableZips);
-    
-        if (maxPackable === 0) {
-            alert('Не хватает шишек или zip пакетов для расфасовки!');
-            return;
-        }
-    
-        // Уменьшаем количество шишек и пакетов
-        decreaseItem('shishka', maxPackable * 5);
-        decreaseItem(zipId, maxPackable);
-    
-        // Добавляем расфасованные zip с шишкой
-        if (!inventory['zip_shishka']) {
-            inventory['zip_shishka'] = { count: 0, type: 'packed_product', name: 'Zip с шишкой' };
-        }
-        inventory['zip_shishka'].count += maxPackable;
-    
-        saveInventory();
-        updateInventory();
-    }
+     
     
 
-    function applyFertilizer(itemId) {
-        alert('Удобрение применено!');
-        decreaseItem(itemId, 1);
-    }
-
-    function packShishki(zipId) {
-        if (inventory['shishka']?.count >= 5 && inventory[zipId]?.count >= 1) {
-            decreaseItem('shishka', 5);
-            decreaseItem(zipId, 1);
-
-            if (!inventory['zip_shishka']) {
-                inventory['zip_shishka'] = { count: 0, type: 'packed_product', name: 'Zip с шишкой' };
-            }
-            inventory['zip_shishka'].count += 1;
-
-            saveInventory();
-            updateInventory();
-        } else {
-            alert('Не хватает шишек или zip пакетов!');
-        }
-    }
-
-    function decreaseItem(itemId, amount) {
-        if (inventory[itemId]) {
-            inventory[itemId].count -= amount;
-            if (inventory[itemId].count <= 0) {
-                delete inventory[itemId];
-            }
-            saveInventory();
-            updateInventory();
-        }
-    }
-
-    function saveInventory() {
-        localStorage.setItem('inventory', JSON.stringify(inventory));
-    }
-
-    function showActionMenu(actions, targetElement) {
-        const actionMenu = document.getElementById('action-menu');
-        actionMenu.innerHTML = ''; // Очищаем старые кнопки
-    
-        if (actions.length === 0) {
-            actionMenu.classList.add('hidden');
-            return;
-        }
-    
-        actions.forEach(action => {
-            const button = document.createElement('button');
-            button.className = 'action-button';
-            button.textContent = action.label;
-            button.addEventListener('click', () => {
-                action.action();
-                hideActionMenu();
-            });
-            actionMenu.appendChild(button);
-        });
-    
-        const rect = targetElement.getBoundingClientRect();
-    
-        // Новое позиционирование — меню справа от элемента
-        actionMenu.style.top = `${rect.top + window.scrollY + rect.height / 2 - actionMenu.offsetHeight / 2}px`; 
-        actionMenu.style.left = `${rect.right + window.scrollX + 10}px`; // немного отступим вправо
-    
-        // Чтобы корректно рассчитать offsetHeight, сначала показать элемент невидимым
-        actionMenu.classList.add('hidden');
-        actionMenu.style.display = 'block'; // временно включаем отображение
-    
-        // После того как браузер прочитал размеры:
-        requestAnimationFrame(() => {
-            actionMenu.style.top = `${rect.top + window.scrollY + rect.height / 2 - actionMenu.offsetHeight / 2}px`;
-            actionMenu.style.left = `${rect.right + window.scrollX + 10}px`;
-            actionMenu.classList.remove('hidden');
-            actionMenu.style.display = ''; // убираем фикс
-        });
-    }
     
     
     // Скрытие меню при клике вне его
@@ -587,56 +588,138 @@ document.getElementById('close-shop-button').addEventListener('click', function(
 
 //____________________________________________________________________________________________ ДАРКНЕТ
 
-// ——— Darknet ———
-const darknetButton       = document.getElementById('darknet-button');
-const darknetModal        = document.getElementById('darknet-modal');
-const closeDarknetButton  = document.getElementById('close-darknet-modal');
-const tabButtons          = document.querySelectorAll('#darknet-tabs .tab-button');
-const panels              = document.querySelectorAll('#darknet-tab-content .tab-panel');
-const chatWindow          = document.getElementById('chat-window');
-const messageInput        = document.getElementById('message-input');
-const sendMessageButton   = document.getElementById('send-message-button');
+// === Messenger ===
 
-// Открыть/закрыть Darknet
-if (darknetButton && darknetModal) {
-  darknetButton.addEventListener('click', () => darknetModal.classList.add('open'));
-}
-if (closeDarknetButton && darknetModal) {
-  closeDarknetButton.addEventListener('click', () => darknetModal.classList.remove('open'));
+const messengerModal = document.getElementById('messenger-modal');
+const closeMessengerBtn = document.getElementById('close-messenger');
+const chatList = document.getElementById('chat-list');
+const chatWindow = document.getElementById('chat-window');
+const messages = document.getElementById('messages');
+const replyButtons = document.getElementById('reply-buttons');
+const uncleRedji = document.getElementById('uncle-redji');
+
+function openMessenger() {
+    messengerModal.classList.add('open');
+    chatWindow.classList.add('hidden');
+    chatList.classList.remove('hidden');
 }
 
-// Переключение вкладок
-tabButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    // активный таб
-    tabButtons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    // панели
-    panels.forEach(p => p.classList.remove('active'));
-    const panel = document.getElementById(`${btn.id}-content`);
-    if (panel) panel.classList.add('active');
-  });
+function closeMessenger() {
+    messengerModal.classList.remove('open');
+}
+
+closeMessengerBtn.addEventListener('click', closeMessenger);
+
+// Открытие чата с Дядей Реджи
+uncleRedji.addEventListener('click', () => {
+    chatList.classList.add('hidden');
+    chatWindow.classList.remove('hidden');
+    startChatWithUncle();
 });
 
-// Чат: отправка и простой ответ
-if (sendMessageButton && messageInput && chatWindow) {
-  sendMessageButton.addEventListener('click', () => {
-    const text = messageInput.value.trim();
-    if (!text) return;
-    // своё сообщение
-    const out = document.createElement('div');
-    out.className = 'message outgoing';
-    out.innerHTML = `<div class="message-body"><p>${text}</p></div>`;
-    chatWindow.appendChild(out);
-    messageInput.value = '';
-    chatWindow.scrollTop = chatWindow.scrollHeight;
-    // эмуляция ответа
+function startChatWithUncle() {
+    messages.innerHTML = '';
+    replyButtons.innerHTML = '';
+
+    addMessage("user", "Привет, Дядя Реджи!");
     setTimeout(() => {
-      const inMsg = document.createElement('div');
-      inMsg.className = 'message incoming';
-      inMsg.innerHTML = `<div class="message-body"><p>Сколько у тебя есть?</p></div>`;
-      chatWindow.appendChild(inMsg);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }, 800);
-  });
+        addMessage("bot", "Здарова, чем могу помочь?");
+        setReplyOptions([
+            { text: "Хочу продать стаф", action: startSelling }
+        ]);
+    }, 1000);
+}
+
+function addMessage(sender, text) {
+    const msg = document.createElement('div');
+    msg.classList.add('message');
+    if (sender === "user") msg.classList.add('user');
+    msg.innerText = text;
+    messages.appendChild(msg);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function setReplyOptions(options) {
+    replyButtons.innerHTML = '';
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.innerText = opt.text;
+        btn.addEventListener('click', opt.action);
+        replyButtons.appendChild(btn);
+    });
+}
+
+function startSelling() {
+    addMessage("user", "Хочу продать стаф.");
+    replyButtons.innerHTML = '';
+
+    setTimeout(() => {
+        addMessage("bot", "Сколько у тебя пакетиков?");
+        setReplyOptions([
+            { text: "5 пакетов", action: () => offerPrice(5) },
+            { text: "10 пакетов", action: () => offerPrice(10) },
+            { text: "Продать всё", action: () => offerPrice('all') }
+        ]);
+    }, 1000);
+}
+
+function offerPrice(amount) {
+    addMessage("user", `У меня ${amount === 'all' ? 'все' : amount} пакетов.`);
+    replyButtons.innerHTML = '';
+
+    // Расчет цены
+    let count = 0;
+    if (amount === 'all') {
+        count = inventory['zip_shishka']?.count || 0;
+    } else {
+        count = amount;
+    }
+
+    if (count === 0) {
+        setTimeout(() => {
+            addMessage("bot", "У тебя нет пакетиков!");
+        }, 1000);
+        return;
+    }
+
+    const pricePerPack = Math.floor(Math.random() * (25 - 18) + 18); // 18-25$
+    const totalPrice = pricePerPack * count;
+
+    setTimeout(() => {
+        addMessage("bot", `Готов взять ${count} пакетов за ${totalPrice}$. Согласен?`);
+        setReplyOptions([
+            { text: "Да", action: () => confirmDeal(count, totalPrice) },
+            { text: "Нет", action: cancelDeal }
+        ]);
+    }, 1000);
+}
+
+function confirmDeal(count, totalPrice) {
+    addMessage("user", "Да, забирай!");
+    replyButtons.innerHTML = '';
+
+    // Списание пакетов и добавление денег
+    if (inventory['zip_shishka']?.count >= count) {
+        inventory['zip_shishka'].count -= count;
+        if (inventory['zip_shishka'].count <= 0) {
+            delete inventory['zip_shishka'];
+        }
+        playerMoney += totalPrice;
+        saveInventory();
+        localStorage.setItem('playerMoney', playerMoney);
+        updateInventory();
+        updateMoneyDisplay();
+    }
+
+    setTimeout(() => {
+        addMessage("bot", "Отлично, бабки перевёл.");
+    }, 1000);
+}
+
+function cancelDeal() {
+    addMessage("user", "Нет, передумал.");
+    replyButtons.innerHTML = '';
+    setTimeout(() => {
+        addMessage("bot", "Ну окей, обращайся.");
+    }, 1000);
 }
