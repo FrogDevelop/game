@@ -5,9 +5,11 @@ let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
 let inventoryItems; 
 
 let selectedProduct = null;
-
+let quantity = 1; // глобальная переменная для количества
 // Обновляем отображение денег
 const moneyDisplay = document.querySelector('.money');
+
+
 
 function updateMoneyDisplay() {
     if (moneyDisplay) {
@@ -242,6 +244,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('darknet_button').addEventListener('click', openMessenger);
 
+    function resetQuantity() {
+        quantity = 1;
+        if (quantityInput) quantityInput.value = 1;
+    }
 
     // Обновленная структура shopItems
     const shopItems = [
@@ -262,11 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
             description: 'Дополнительный свет для ускоренного роста.', benefit: 'Увеличивает скорость роста.', quantitySelectable: false
         }
     ];
-     
-    
-
-    
-    
     // Скрытие меню при клике вне его
     document.addEventListener('click', (event) => {
         const actionMenu = document.getElementById('action-menu');
@@ -376,11 +377,15 @@ document.addEventListener('DOMContentLoaded', () => {
         shopModal.classList.add('open');
         renderShopItems();
         updateMoneyDisplay(); 
+
+        resetQuantity();
     }
 
     function closeShop() {
         shopModal.classList.remove('open');
         updateMoneyDisplay(); 
+        quantity = 1;
+        if (quantityInput) quantityInput.value = 1;
     }
 
     function renderShopItems() {
@@ -422,43 +427,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (item.quantitySelectable) {
             quantityContainer.style.display = 'block';
-            quantityInput.value = 1;
+            resetQuantity();
         } else {
             quantityContainer.style.display = 'none';
         }
 
         productModal.classList.add('open');
         updateMoneyDisplay(); 
+        quantity = 1;
+        if (quantityInput) quantityInput.value = 1;
     }
 
     function closeProductModal() {
         productModal.classList.remove('open');
         updateMoneyDisplay(); 
+        quantity = 1;
+        if (quantityInput) quantityInput.value = 1;
     }
 
     function confirmPurchase() {
         if (!selectedProduct) return;
-
-        const quantity = selectedProduct.quantitySelectable ? parseInt(quantityInput.value) || 1 : 1;
-        const totalPrice = selectedProduct.price * quantity;
-
+    
+        const quantityValue = selectedProduct.quantitySelectable ? parseInt(quantityInput.value) || 1 : 1;
+        const totalPrice = selectedProduct.price * quantityValue;
+    
         if (playerMoney >= totalPrice) {
             playerMoney -= totalPrice;
-
+    
             if (!inventory[selectedProduct.id]) {
                 inventory[selectedProduct.id] = { count: 0, type: selectedProduct.type, name: selectedProduct.name };
             }
-            inventory[selectedProduct.id].count += quantity;
-
+            inventory[selectedProduct.id].count += quantityValue;
+    
             saveInventory();
             localStorage.setItem('playerMoney', playerMoney);
-
+    
             closeProductModal();
             closeShop();
         } else {
             alert('Недостаточно средств!');
         }
         updateMoneyDisplay(); 
+    
+        // После покупки сбрасываем количество
+        quantity = 1;
+        if (quantityInput) quantityInput.value = 1;
     }
 
     if (shopButton) {
@@ -476,6 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirmBuyButton) {
         confirmBuyButton.addEventListener('click', confirmPurchase);
     }
+
 });
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -483,14 +497,11 @@ document.addEventListener("DOMContentLoaded", function() {
     const increaseButton = document.getElementById("increase-quantity");
     const decreaseButton = document.getElementById("decrease-quantity");
 
-    let quantity = 1; 
-
     increaseButton.addEventListener("click", function() {
         quantity++;
         updateQuantity();
     });
 
-    // Уменьшаем количество
     decreaseButton.addEventListener("click", function() {
         if (quantity > 1) {
             quantity--;
@@ -498,7 +509,6 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // Обновляем значение в поле
     function updateQuantity() {
         quantityInput.value = quantity;
     }

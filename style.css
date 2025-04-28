@@ -4,6 +4,11 @@
     box-sizing: border-box;
 }
 
+html, body{
+    touch-action: none; /* Отключает любые жесты */
+    user-select: none;  /* Отключает выделение текста */
+}
+
 body {
     background-color: black;
     background-image: url('back.jpg');
@@ -15,8 +20,8 @@ body {
     overflow: hidden;
     position: relative;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden; /* Отключение прокрутки, если нужно */
 }
-
 
 footer {
     position: absolute;
