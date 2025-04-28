@@ -219,6 +219,18 @@ function saveInventory() {
     localStorage.setItem('inventory', JSON.stringify(inventory));
 }
 
+document.addEventListener('click', (event) => {
+    const actionMenu = document.getElementById('action-menu');
+    if (!actionMenu.contains(event.target) && !event.target.closest('.inventory-item')) {
+        hideActionMenu();
+    }
+});
+
+function hideActionMenu() {
+    const actionMenu = document.getElementById('action-menu');
+    actionMenu.classList.add('hidden');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // === Все твои текущие переменные остаются без изменений ===
     const inventoryBtn = document.getElementById('inventar_button');
@@ -273,17 +285,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     ];
     // Скрытие меню при клике вне его
-    document.addEventListener('click', (event) => {
-        const actionMenu = document.getElementById('action-menu');
-        if (!actionMenu.contains(event.target) && !event.target.closest('.inventory-item')) {
-            hideActionMenu();
-        }
-    });
-    
-    function hideActionMenu() {
-        const actionMenu = document.getElementById('action-menu');
-        actionMenu.classList.add('hidden');
-    }
 
     function showBud(bud) {
         createLeaves(bud);
@@ -678,7 +679,9 @@ function startSelling() {
 }
 
 function offerPrice(amount) {
-    addMessage("user", `У меня ${amount === 'all' ? 'все' : amount} пакетов.`);
+    const totalZips = inventory['zip_shishka']?.count || 0;
+    const packCount = amount === 'all' ? totalZips : amount;
+    addMessage("user", `У меня ${packCount} пакетов.`);
     replyButtons.innerHTML = '';
 
     // Расчет цены
@@ -696,7 +699,7 @@ function offerPrice(amount) {
         return;
     }
 
-    const pricePerPack = Math.floor(Math.random() * (25 - 18) + 18); // 18-25$
+    const pricePerPack = Math.floor(Math.random() * (25 - 18) + 18); 
     const totalPrice = pricePerPack * count;
 
     setTimeout(() => {

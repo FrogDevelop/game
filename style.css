@@ -766,6 +766,7 @@ a:focus {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    outline: #111111 10px solid;
 }
 
 .messenger-header {
@@ -773,17 +774,44 @@ a:focus {
     padding: 15px;
     text-align: center;
     position: relative;
+    justify-content: center;
+    align-items: center;
+    height: 70px;
+    width: 100%;
+    display: flex; /* Включаем Flexbox */
+    justify-content: center; /* Центрируем по горизонтали */
+    align-items: center; /* Центрируем по вертикали */
 }
-
-.close-button {
-    position: absolute;
-    left: 15px;
-    top: 15px;
-    font-size: 24px;
-    color: white;
-    cursor: pointer;
+.sound{
+    background-color: black;
+    height: 12px;
+    width: 70px;
+    border-radius: 100px;
 }
-
+.cam{
+    position: relative;
+    left: 10px;
+    width: 12px;
+    height: 12px;
+    background-color: black;
+    border-radius: 100px;
+}
+.blik{
+    position: relative;
+    left: 7px;
+    top: 2px;
+    background-color: rgba(255, 255, 255, 0.384);
+    height: 3px;
+    width: 3px;
+    border-radius: 100px;
+}
+.text-conteiner{
+    position: relative;
+    top: 5px;
+    display: flex;
+    justify-content: center; /* Центрируем по горизонтали */
+    align-items: center; /* Центрируем по вертикали */
+}
 .chat-list {
     flex: 1;
     overflow-y: auto;
@@ -791,11 +819,17 @@ a:focus {
 
 .chat-item {
     display: flex;
+    position: relative;
     align-items: center;
     gap: 10px;
     padding: 15px;
     background: #333;
     border-bottom: 1px solid #444;
+    top: 20px;
+    left: 50%;
+    transform: translate(-50%);
+    width: 90%;
+    border-radius: 20px;
     cursor: pointer;
 }
 
@@ -860,4 +894,29 @@ a:focus {
 
 .reply-buttons button:hover {
     background: #777;
+}
+.down-phone{
+    position: relative;
+    background-color: #111111;
+    width: 100%;
+    height: 70px;
+    display: flex; /* Включаем Flexbox */
+    justify-content: center; /* Центрируем по горизонтали */
+    align-items: center; /* Центрируем по вертикали */
+}
+#close-messenger {
+    position: relative;
+    color: white;
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+    display: flex; /* Включаем Flexbox */
+    justify-content: center; /* Центрируем по горизонтали */
+    align-items: center; /* Центрируем по вертикали */
+    background-color: #444;
+    border-radius: 100px;
+}
+#close-messenger img{
+    height: 35px;
+    width: 35px;
 }
