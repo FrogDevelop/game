@@ -89,7 +89,7 @@ body {
     background-repeat: no-repeat;
     height: 100vh;
     width: 100vw;
-    overflow-y: hidden;
+    overflow-y: auto;
     position: relative;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -345,8 +345,8 @@ footer {
     color: white;
     font-size: 14px;
 }
+/* ________________________________________________________ SHOP_____________________________________________________ */
 
-/* Основная модалка */
 #shop-modal {
     position: fixed;
     top: 0;
@@ -356,6 +356,7 @@ footer {
     background: rgba(0, 0, 0, 0.215);
     backdrop-filter: blur(20px);
     z-index: 10000;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     opacity: 0;
     visibility: hidden;
@@ -376,7 +377,6 @@ footer {
     background: rgba(0, 0, 0, 0.533);
     min-height: 100vh;
     box-sizing: border-box;
-    overflow: auto;
 }
 
 /* Шапка магазина */
@@ -421,6 +421,11 @@ footer {
     flex-direction: column;
     gap: 12px;
     padding: 15px 0;
+    padding-bottom: 100px;
+    min-height: 100vh;
+    box-sizing: border-box;
+    overflow-y: auto; /* Добавляем скроллбар при необходимости */
+    max-height: 100vh; /* Ограничиваем высоту */
 }
 
 /* Карточка товара (на всю ширину) */
@@ -534,7 +539,7 @@ footer {
     padding: 0;
     line-height: 27px; /* Центрирование текста по вертикали */
 }
-
+/* ________________________________________________________ SHOP_____________________________________________________ */
 .modal {
     display: none;
     position: fixed;
@@ -658,7 +663,7 @@ a:focus {
     outline: none;
 }
 
-/* Darknet-модалка*/
+/*--------------------------------------------------------- Darknet-модалка----------------------------------------------------*/
 .messenger-modal {
     display: none;
     position: fixed;
@@ -705,7 +710,7 @@ a:focus {
 }
 .down-phone {
     background: #2c2c2c;
-    width: 100%; /* Занимает всю ширину */
+    width: 100%;
     height: 60px;
     display: flex;
     justify-content: center;
@@ -752,6 +757,7 @@ a:focus {
     align-items: center;
     gap: 10px;
     padding: 15px;
+    margin-top: 10px;
     background: #333;
     border-bottom: 1px solid #444;
     top: 20px;
@@ -841,6 +847,8 @@ a:focus {
     height: 35px;
     width: 35px;
 }
+
+/*--------------------------------------------------------- Darknet-модалка----------------------------------------------------*/
 .lamp-conteiner{
     position: absolute;
     left: 50%;
@@ -911,4 +919,81 @@ a:focus {
     flex-direction: column;
     align-items: center;
     gap: 10px;
+}
+#mixer-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.mixer-container {
+    background: #2a2a2a;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 500px;
+}
+
+.mixer-slots {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.slot {
+    width: 80px;
+    height: 80px;
+    border: 2px dashed #555;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.mixer-items {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.mixer-item {
+    background: #333;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.mixer-item:hover {
+    background: #444;
+}
+
+#mix-button, #close-mixer {
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#mix-button {
+    background: #4CAF50;
+    color: white;
+}
+
+#close-mixer {
+    background: #f44336;
+    color: white;
 }

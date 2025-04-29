@@ -6,6 +6,15 @@ let shishCount = parseInt(localStorage.getItem('shishCount')) || 0;
 let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
 let inventoryItems; 
 
+// Активные бафы для растений
+let growthBoostActive = false;
+let yieldBoostActive = false;
+let rareHarvestActive = false;
+let superFoodActive = false;
+
+const activeBuffs = {};
+const moneyDisplay = document.querySelector('.money');
+
 const shopItems = [
     { id: 'zip', name: 'Зип пакет', price: 5, type: 'zip', image: 'zip.png',
       description: 'Плотный пакет для хранения шишек.', displayName: 'зип-пакетов', quantitySelectable: true },
@@ -26,7 +35,7 @@ const buffEffects = {
         duration: 120,
         description: "Растения растут в 2 раза быстрее",
         activate: function() {
-            // Эффект реализуется в функции hideBud через уменьшение времени респавна
+            growthBoostActive = true;
         }
     },
     yieldBoost: {
@@ -35,7 +44,7 @@ const buffEffects = {
         duration: 60,
         description: "+1 шишка за сбор (всегда)",
         activate: function() {
-            // Эффект реализуется в функции hideBud через увеличение harvestedCount
+            yieldBoostActive = true;
         }
     },
     rareHarvest: {
@@ -44,7 +53,7 @@ const buffEffects = {
         duration: 120,
         description: "50% шанс получить +1 шишку",
         activate: function() {
-            // Эффект реализуется в функции hideBud через увеличение harvestedCount
+            rareHarvestActive = true;
         }
     },
     superFood: {
@@ -53,7 +62,7 @@ const buffEffects = {
         duration: 30,
         description: "10% шанс получить 5 шишек вместо 1",
         activate: function() {
-            // Эффект реализуется в функции hideBud через увеличение harvestedCount
+            superFoodActive = true;
         }
     }
 };
@@ -109,148 +118,9 @@ function showNotification(text, isError = false) {
     }, 3000);
 }
 
-// Модифицированная функция activateBuff
-function activateBuff(buffId, duration, iconPath) {
-    if (Object.keys(activeBuffs).length >= 1) {
-        showNotification('Можно активировать только один бафф за раз!', true);
-        return false;
-    }
-
-    const buffContainer = document.getElementById('buff-status-container');
-    if (!buffContainer) {
-        console.error('buff-status-container not found');
-        return false;
-    }
-
-    // Очищаем предыдущий бафф, если он был
-    if (activeBuffs[buffId]) {
-        clearInterval(activeBuffs[buffId].interval);
-        const existingBuff = document.getElementById(`buff-${buffId}`);
-        if (existingBuff) existingBuff.remove();
-    }
-
-    const endTime = Date.now() + duration * 1000;
-    const buffElement = document.createElement('div');
-    buffElement.className = 'buff-item';
-    buffElement.id = `buff-${buffId}`;
-    buffElement.innerHTML = `
-        <img src="${iconPath}" alt="icon" class="buff-icon">
-        <div class="buff-timer">${Math.floor(duration/60).toString().padStart(2, '0')}:${(duration%60).toString().padStart(2, '0')}</div>
-    `;
-    buffContainer.appendChild(buffElement);
-
-    function updateTimer() {
-        const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
-        const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
-        const secs = String(remaining % 60).padStart(2, '0');
-        buffElement.querySelector('.buff-timer').textContent = `${mins}:${secs}`;
-
-        if (remaining <= 0) {
-            clearInterval(activeBuffs[buffId].interval);
-            delete activeBuffs[buffId];
-            buffElement.remove();
-            deactivateBuff(buffId);
-            showNotification(`Эффект баффа закончился`);
-        }
-    }
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-    activeBuffs[buffId] = { interval, element: buffElement };
-    
-    // Активируем соответствующий флаг баффа
-    switch(buffId) {
-        case 'growthBoost': growthBoostActive = true; break;
-        case 'yieldBoost': yieldBoostActive = true; break;
-        case 'rareHarvest': rareHarvestActive = true; break;
-        case 'superFood': superFoodActive = true; break;
-    }
-
-    showNotification(`Бафф активирован!`);
-    return true;
-}
-
-// Модифицированная функция applyItemEffect
-function applyItemEffect(itemId, type, activeVar, buffId, duration, iconPath, message) {
-    if (!inventory[itemId] || inventory[itemId].count < 1) {
-        showNotification('Нельзя активировать несколько бафов одновременно!', true);
-        return;
-    }
-
-    if (activateBuff(buffId, duration, iconPath)) {
-        showNotification(message);
-        decreaseItem(itemId, 1);
-        
-        // Устанавливаем флаг баффа
-        switch(buffId) {
-            case 'growthBoost': growthBoostActive = true; break;
-            case 'yieldBoost': yieldBoostActive = true; break;
-            case 'rareHarvest': rareHarvestActive = true; break;
-            case 'superFood': superFoodActive = true; break;
-        }
-    }
-}
-
-// Остальные функции применения баффов остаются без изменений
-function applyFertilizer(itemId) {
-    applyItemEffect(itemId, 'fertilizer', growthBoostActive, 'growthBoost', 120, 'fertilizer.png', 
-                   'Удобрение применено! Растения растут в 5 раз быстрее.');
-}
-
-function applyPlantFood(itemId) {
-    applyItemEffect(itemId, 'plant_food', yieldBoostActive, 'yieldBoost', 60, 'plant_food.png',
-                   'Еда для куста применена! +1 шишка за каждый сбор.');
-}
-
-function applyRareFertilizer(itemId) {
-    applyItemEffect(itemId, 'rare_fertilizer', rareHarvestActive, 'rareHarvest', 120, 'rare_fertilizer.png',
-                   'Редкий удобритель использован! 50% шанс получить дополнительную шишку.');
-}
-
-function applySuperFood(itemId) {
-    applyItemEffect(itemId, 'super_food', superFoodActive, 'superFood', 30, 'super_food.png',
-                   'Супер-питание применено! 10% шанс получить 5 шишек вместо 1.');
-}
-
-// Активные бафы для растений
-let growthBoostActive = false;
-let yieldBoostActive = false;
-let rareHarvestActive = false;
-let superFoodActive = false;
-
-const activeBuffs = {};
-const moneyDisplay = document.querySelector('.money');
-
-// Отключение зума на мобильных устройствах
-document.addEventListener('touchstart', function(e) {
-    if (e.touches.length > 1) {
-        e.preventDefault();
-    }
-}, { passive: false });
-
-function updateMoneyDisplay() {
-    if (moneyDisplay) {
-        const currentAmount = parseInt(moneyDisplay.textContent);
-        const diff = playerMoney - currentAmount;
-        const duration = 500;
-        let startTime = null;
-        
-        function animateMoney(timestamp) {
-            if (!startTime) startTime = timestamp;
-            const progress = timestamp - startTime;
-            const progressRatio = Math.min(progress / duration, 1);
-            moneyDisplay.textContent = currentAmount + Math.round(diff * progressRatio);
-            if (progress < duration) {
-                window.requestAnimationFrame(animateMoney);
-            }
-        }
-        window.requestAnimationFrame(animateMoney);
-    }
-}
-
 function activateBuff(buffId) {
     if (Object.keys(activeBuffs).length >= 1) {
-        showNotification('Нельзя активировать несколько бафов одновременно!', true);
+        showNotification('Можно активировать только один бафф за раз!', true);
         return false;
     }
 
@@ -282,6 +152,7 @@ function activateBuff(buffId) {
             clearInterval(interval);
             buffElement.remove();
             delete activeBuffs[buffId];
+            deactivateBuff(buffId);
             showNotification(`Бафф "${buff.name}" закончился`);
         }
     }
@@ -295,6 +166,79 @@ function activateBuff(buffId) {
     return true;
 }
 
+function deactivateBuff(buffId) {
+    switch(buffId) {
+        case 'growthBoost': growthBoostActive = false; break;
+        case 'yieldBoost': yieldBoostActive = false; break;
+        case 'rareHarvest': rareHarvestActive = false; break;
+        case 'superFood': superFoodActive = false; break;
+    }
+    console.log(`Баф "${buffId}" деактивирован.`);
+}
+
+function applyItemEffect(itemId, type, buffId, message) {
+    if (!inventory[itemId] || inventory[itemId].count < 1) {
+        showNotification('Недостаточно предметов!', true);
+        return;
+    }
+
+    if (Object.keys(activeBuffs).length > 0) {
+        showNotification('Нельзя активировать несколько бафов одновременно!', true);
+        return;
+    }
+
+    if (activateBuff(buffId)) {
+        showNotification(message);
+        decreaseItem(itemId, 1);
+    }
+}
+
+function applyFertilizer(itemId) {
+    applyItemEffect(itemId, 'fertilizer', 'growthBoost', 
+                   'Удобрение применено! Растения растут в 2 раза быстрее.');
+}
+
+function applyPlantFood(itemId) {
+    applyItemEffect(itemId, 'plant_food', 'yieldBoost',
+                   'Еда для куста применена! +1 шишка за каждый сбор.');
+}
+
+function applyRareFertilizer(itemId) {
+    applyItemEffect(itemId, 'rare_fertilizer', 'rareHarvest',
+                   'Редкий удобритель использован! 50% шанс получить дополнительную шишку.');
+}
+
+function applySuperFood(itemId) {
+    applyItemEffect(itemId, 'super_food', 'superFood',
+                   'Супер-питание применено! 10% шанс получить 5 шишек вместо 1.');
+}
+
+// Отключение зума на мобильных устройствах
+document.addEventListener('touchstart', function(e) {
+    if (e.touches.length > 1) {
+        e.preventDefault();
+    }
+}, { passive: false });
+
+function updateMoneyDisplay() {
+    if (moneyDisplay) {
+        const currentAmount = parseInt(moneyDisplay.textContent);
+        const diff = playerMoney - currentAmount;
+        const duration = 500;
+        let startTime = null;
+        
+        function animateMoney(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const progress = timestamp - startTime;
+            const progressRatio = Math.min(progress / duration, 1);
+            moneyDisplay.textContent = currentAmount + Math.round(diff * progressRatio);
+            if (progress < duration) {
+                window.requestAnimationFrame(animateMoney);
+            }
+        }
+        window.requestAnimationFrame(animateMoney);
+    }
+}
 
 function updateInventory() {
     if (!inventoryItems) return;
@@ -331,6 +275,7 @@ function updateInventory() {
 
 function getItemImage(id) {
     const items = {
+        'mixer_machine': 'mixer.png',
         'shishka': 'bud.png',
         'fertilizer': 'fertilizer.png',
         'zip': 'zip.png',
@@ -353,13 +298,19 @@ function openItemActions(itemId, targetElement) {
     const actionMap = {
         'fertilizer': () => applyFertilizer(itemId),
         'plant_food': () => applyPlantFood(itemId),
-        'booster': () => applyBooster(itemId),
         'rare_fertilizer': () => applyRareFertilizer(itemId),
         'super_food': () => applySuperFood(itemId)
     };
 
     if (actionMap[item.type]) {
         actions.push({ label: 'Применить', action: actionMap[item.type] });
+    }
+
+    if (itemId === 'mixer_machine') {
+        actions.push({ 
+            label: 'Использовать', 
+            action: () => openMixerInterface() 
+        });
     }
 
     if (item.type === 'zip' && inventory['shishka']?.count >= 5) {
@@ -372,90 +323,135 @@ function openItemActions(itemId, targetElement) {
     showActionMenu(actions, targetElement);
 }
 
-function deactivateBuff(buffId) {
-    const buffs = {
-        'growthBoost': () => growthBoostActive = false,
-        'yieldBoost': () => yieldBoostActive = false,
-        'rareHarvest': () => rareHarvestActive = false,
-        'superFood': () => superFoodActive = false
-    };
-    if (buffs[buffId]) buffs[buffId]();
-    console.log(`Баф "${buffId}" деактивирован.`);
+function openMixerInterface() {
+    // Закрываем инвентарь
+    document.getElementById('inventory-modal').classList.remove('open');
+    
+    // Создаем интерфейс смешивания
+    const mixerModal = document.createElement('div');
+    mixerModal.id = 'mixer-modal';
+    mixerModal.innerHTML = `
+        <div class="mixer-container">
+            <h3>Машинка для смешивания</h3>
+            <div class="mixer-slots">
+                <div class="slot" id="slot-base"></div>
+                <div class="mixer-plus">+</div>
+                <div class="slot" id="slot-additive"></div>
+                <div class="mixer-equals">=</div>
+                <div class="slot" id="slot-result"></div>
+            </div>
+            <div class="mixer-items">
+                ${Object.entries(inventory)
+                  .filter(([id, item]) => id === 'shishka' || item.type === 'mix_component')
+                  .map(([id, item]) => `
+                    <div class="mixer-item" data-item-id="${id}">
+                        <img src="${getItemImage(id)}" alt="${item.name}">
+                        <span>${item.name} (${item.count})</span>
+                    </div>
+                  `).join('')}
+            </div>
+            <button id="mix-button">Смешать</button>
+            <button id="close-mixer">Закрыть</button>
+        </div>
+    `;
+    document.body.appendChild(mixerModal);
+    
+    // Логика перетаскивания предметов
+    setupMixerDragAndDrop();
 }
 
-function applyItemEffect(itemId, type, activeVar, buffId, duration, iconPath, message) {
-    if (Object.keys(activeBuffs).length > 0) {
-        showNotification('Нельзя активировать несколько бафов одновременно!', true);
+function setupMixerDragAndDrop() {
+    let baseItem = null;
+    let additiveItem = null;
+    
+    document.querySelectorAll('.mixer-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            if (!baseItem) {
+                baseItem = itemId;
+                document.getElementById('slot-base').innerHTML = this.innerHTML;
+            } else if (!additiveItem && itemId !== baseItem) {
+                additiveItem = itemId;
+                document.getElementById('slot-additive').innerHTML = this.innerHTML;
+                showPossibleResult();
+            }
+        });
+    });
+    
+    document.getElementById('mix-button').addEventListener('click', mixItems);
+    document.getElementById('close-mixer').addEventListener('click', () => {
+        document.getElementById('mixer-modal').remove();
+    });
+}
+
+function showPossibleResult() {
+    const resultSlot = document.getElementById('slot-result');
+    
+    // Определяем результат смешивания
+    let resultItem = null;
+    if (baseItem === 'shishka' && additiveItem === 'mix_herbs') {
+        resultItem = { id: 'shishka_herb', name: "Травяные шишки" };
+    } 
+    // Добавьте другие комбинации...
+    
+    if (resultItem) {
+        resultSlot.innerHTML = `
+            <img src="${getItemImage(resultItem.id)}" alt="${resultItem.name}">
+            <span>${resultItem.name}</span>
+        `;
+    } else {
+        resultSlot.innerHTML = "<span>Неизвестный результат</span>";
+    }
+}
+
+function mixItems() {
+    if (!baseItem || !additiveItem) {
+        showNotification("Выберите два разных ингредиента!", true);
         return;
     }
-    showNotification(message);
-    decreaseItem(itemId, 1);
-    activeVar = true;
-    activateBuff(buffId, duration, iconPath);
-}
-
-function applyFertilizer(itemId) {
-    applyItemEffect(itemId, 'fertilizer', growthBoostActive, 'growthBoost', 120, 'fertilizer.png', 
-                   'Удобрение применено! Немного ускоряет рост кустов.');
-}
-
-function applyPlantFood(itemId) {
-    applyItemEffect(itemId, 'plant_food', yieldBoostActive, 'yieldBoost', 60, 'plant_food.png',
-                   'Еда для куста применена! Повышена урожайность.');
-}
-
-function applyRareFertilizer(itemId) {
-    applyItemEffect(itemId, 'rare_fertilizer', rareHarvestActive, 'rareHarvest', 120, 'rare_fertilizer.png',
-                   'Редкий удобритель использован! Возможность двойного урожая.');
-}
-
-function applySuperFood(itemId) {
-    applyItemEffect(itemId, 'super_food', superFoodActive, 'superFood', 30, 'super_food.png',
-                   'Супер-питание применено! Шанс получить редкие шишки.');
-}
-
-function packShishki(zipId) {
-    if (inventory['shishka']?.count >= 5 && inventory[zipId]?.count >= 1) {
-        decreaseItem('shishka', 5);
-        decreaseItem(zipId, 1);
-
-        if (!inventory['zip_shishka']) {
-            inventory['zip_shishka'] = { count: 0, type: 'packed_product', name: 'Zip с шишкой' };
+    
+    // Проверяем, есть ли ингредиенты
+    if (inventory[baseItem].count < 1 || inventory[additiveItem].count < 1) {
+        showNotification("Недостаточно ингредиентов!", true);
+        return;
+    }
+    
+    // Уменьшаем количество ингредиентов
+    decreaseItem(baseItem, 1);
+    decreaseItem(additiveItem, 1);
+    
+    // Определяем результат
+    let resultItem = null;
+    if (baseItem === 'shishka' && additiveItem === 'mix_herbs') {
+        resultItem = { 
+            id: 'shishka_herb', 
+            name: "Травяные шишки",
+            type: "product",
+            effect: "Дают больше урожая"
+        };
+    }
+    // Добавьте другие комбинации...
+    
+    if (resultItem) {
+        // Добавляем результат в инвентарь
+        if (!inventory[resultItem.id]) {
+            inventory[resultItem.id] = { 
+                count: 0, 
+                type: resultItem.type, 
+                name: resultItem.name 
+            };
         }
-        inventory['zip_shishka'].count += 1;
+        inventory[resultItem.id].count += 1;
         saveInventory();
         updateInventory();
+        
+        showNotification(`Получено: ${resultItem.name}! ${resultItem.effect || ''}`);
     } else {
-        showNotification('Не хватает шишек или zip пакетов!', true);
+        showNotification("Получена неизвестная субстанция...", true);
     }
-}
-
-// Функция открытия меню для предмета
-function openItemActions(itemId, targetElement) {
-    const item = inventory[itemId];
-    if (!item) return;
-
-    const actions = [];
-    const actionMap = {
-        'fertilizer': () => applyFertilizer(itemId),
-        'plant_food': () => applyPlantFood(itemId),
-        'booster': () => applyBooster(itemId),
-        'rare_fertilizer': () => applyRareFertilizer(itemId),
-        'super_food': () => applySuperFood(itemId)
-    };
-
-    if (actionMap[item.type]) {
-        actions.push({ label: 'Применить', action: actionMap[item.type] });
-    }
-
-    if (item.type === 'zip' && inventory['shishka']?.count >= 5) {
-        actions.push(
-            { label: 'Расфасовать', action: () => packShishki(itemId) },
-            { label: 'Расфасовать все', action: () => packAllShishki(itemId) }
-        );
-    }
-
-    showActionMenu(actions, targetElement);
+    
+    // Закрываем интерфейс
+    document.getElementById('mixer-modal').remove();
 }
 
 // Показ меню действий
@@ -551,6 +547,22 @@ document.addEventListener('click', (e) => {
     }
 });
 
+function packShishki(zipId) {
+    if (inventory['shishka']?.count >= 5 && inventory[zipId]?.count >= 1) {
+        decreaseItem('shishka', 5);
+        decreaseItem(zipId, 1);
+
+        if (!inventory['zip_shishka']) {
+            inventory['zip_shishka'] = { count: 0, type: 'packed_product', name: 'Zip с шишкой' };
+        }
+        inventory['zip_shishka'].count += 1;
+        saveInventory();
+        updateInventory();
+    } else {
+        showNotification('Не хватает шишек или zip пакетов!', true);
+    }
+}
+
 function packAllShishki(zipId) {
     const shishkaItem = inventory['shishka'];
     const zipItem = inventory[zipId];
@@ -592,13 +604,6 @@ function decreaseItem(itemId, amount) {
 function saveInventory() {
     localStorage.setItem('inventory', JSON.stringify(inventory));
 }
-
-document.addEventListener('click', (event) => {
-    const actionMenu = document.getElementById('action-menu');
-    if (actionMenu && !actionMenu.contains(event.target) && !event.target.closest('.inventory-item')) {
-        hideActionMenu();
-    }
-});
 
 // Инициализация при загрузке DOM
 document.addEventListener('DOMContentLoaded', () => {
@@ -713,15 +718,15 @@ document.addEventListener('DOMContentLoaded', () => {
             let harvestedCount = 1; // Базовая урожайность
             
             // Применяем эффекты баффов
-            if (activeBuffs.yieldBoost) {
+            if (yieldBoostActive) {
                 harvestedCount += 1; // +1 шишка всегда
             }
             
-            if (activeBuffs.rareHarvest && Math.random() < 0.5) {
+            if (rareHarvestActive && Math.random() < 0.5) {
                 harvestedCount += 1; // 50% шанс +1 шишка
             }
             
-            if (activeBuffs.superFood && Math.random() < 0.1) {
+            if (superFoodActive && Math.random() < 0.1) {
                 harvestedCount += 4; // 10% шанс +4 шишки (итого 5)
             }
     
@@ -734,7 +739,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateInventory();
     
             // Время респавна зависит от баффа роста
-            const respawnTime = activeBuffs.growthBoost ? 1000 : 5000;
+            const respawnTime = growthBoostActive ? 1000 : 5000;
             setTimeout(() => showBud(bud), respawnTime);
         }, 1000);
     }
@@ -860,6 +865,7 @@ const chatWindow = document.getElementById('chat-window');
 const messages = document.getElementById('messages');
 const replyButtons = document.getElementById('reply-buttons');
 const uncleRedji = document.getElementById('uncle-redji');
+const sylvesterChat = document.getElementById('sylvester-chat');
 
 // Открытие/закрытие мессенджера
 function openMessenger() {
@@ -875,6 +881,43 @@ function closeMessenger() {
 }
 
 closeMessengerBtn?.addEventListener('click', closeMessenger);
+
+if (sylvesterChat) {
+    sylvesterChat.addEventListener('click', () => {
+        chatList.classList.add('hidden');
+        chatWindow.classList.remove('hidden');
+        startChatWithSylvester();
+    });
+}
+
+function startChatWithSylvester() {
+    messages.innerHTML = '';
+    replyButtons.innerHTML = '';
+
+    addMessage("bot", "Йоу, ковбой! Я Сильвестр - король миксологии.");
+    
+    setTimeout(() => {
+        const options = [];
+        
+        // Проверяем, куплена ли уже машинка
+        if (!inventory['mixer_machine']) {
+            options.push({ 
+                text: "Купить машинку для смешивания ($2000)", 
+                action: () => offerMixerMachine() 
+            });
+        }
+        
+        // Всегда показываем вариант с препаратами
+        options.push({ 
+            text: "Посмотреть препараты для смешивания", 
+            action: () => showMixComponents() 
+        });
+        
+        options.push({ text: "Назад", action: () => chatList.classList.remove('hidden') });
+        
+        setReplyOptions(options);
+    }, 1000);
+}
 
 // Начало диалога
 uncleRedji?.addEventListener('click', () => {
@@ -1032,6 +1075,90 @@ function cancelDeal() {
     addMessage("user", "Нет, передумал.");
     replyButtons.innerHTML = '';
     setTimeout(() => addMessage("bot", "Ну окей, обращайся."), 1000);
+}
+
+function offerMixerMachine() {
+    if (playerMoney >= 2000) {
+        addMessage("user", "Я хочу купить машинку для смешивания");
+        setTimeout(() => {
+            addMessage("bot", "Отличный выбор! Держи свою новую игрушку.");
+            playerMoney -= 2000;
+            localStorage.setItem('playerMoney', playerMoney);
+            updateMoneyDisplay();
+            
+            // Добавляем машинку в инвентарь
+            inventory['mixer_machine'] = { 
+                count: 1, 
+                type: 'tool', 
+                name: 'Машинка для смешивания',
+                usable: true
+            };
+            saveInventory();
+            updateInventory();
+            
+            // Обновляем чат (убираем вариант покупки)
+            setTimeout(startChatWithSylvester, 1500);
+        }, 1000);
+    } else {
+        addMessage("user", "Я хочу купить машинку");
+        setTimeout(() => {
+            addMessage("bot", "Эй, у тебя даже бабла нет! Приходи когда будут деньги.");
+            setTimeout(startChatWithSylvester, 1500);
+        }, 1000);
+    }
+}
+
+function showMixComponents() {
+    messages.innerHTML = '';
+    replyButtons.innerHTML = '';
+    
+    addMessage("bot", "У меня есть крутые штуки для миксования:");
+    
+    const components = [
+        { id: 'mix_herbs', name: "Травяная смесь", price: 500, effect: "Увеличивает урожайность" },
+        { id: 'mix_minerals', name: "Минеральный порошок", price: 700, effect: "Ускоряет рост" },
+        { id: 'mix_special', name: "Секретный ингредиент", price: 1500, effect: "Шанс получить редкие шишки" }
+    ];
+    
+    setTimeout(() => {
+        components.forEach(comp => {
+            const btn = document.createElement('button');
+            btn.className = 'action-button';
+            btn.innerHTML = `${comp.name} - ${comp.price}$<br><small>${comp.effect}</small>`;
+            btn.addEventListener('click', () => buyMixComponent(comp));
+            replyButtons.appendChild(btn);
+        });
+        
+        const backBtn = document.createElement('button');
+        backBtn.className = 'action-button';
+        backBtn.textContent = "Назад";
+        backBtn.addEventListener('click', startChatWithSylvester);
+        replyButtons.appendChild(backBtn);
+    }, 1000);
+}
+
+function buyMixComponent(component) {
+    if (playerMoney >= component.price) {
+        playerMoney -= component.price;
+        localStorage.setItem('playerMoney', playerMoney);
+        updateMoneyDisplay();
+        
+        if (!inventory[component.id]) {
+            inventory[component.id] = { 
+                count: 0, 
+                type: 'mix_component', 
+                name: component.name 
+            };
+        }
+        inventory[component.id].count += 1;
+        saveInventory();
+        updateInventory();
+        
+        showNotification(`Куплено: ${component.name}`);
+        setTimeout(startChatWithSylvester, 1500);
+    } else {
+        showNotification("Недостаточно денег!", true);
+    }
 }
 
 // Загрузка
