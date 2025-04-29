@@ -356,7 +356,6 @@ footer {
     background: rgba(0, 0, 0, 0.215);
     backdrop-filter: blur(20px);
     z-index: 10000;
-    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     opacity: 0;
     visibility: hidden;
@@ -377,6 +376,7 @@ footer {
     background: rgba(0, 0, 0, 0.533);
     min-height: 100vh;
     box-sizing: border-box;
+    overflow: auto;
 }
 
 /* Шапка магазина */
