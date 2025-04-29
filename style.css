@@ -89,14 +89,14 @@ body {
     background-repeat: no-repeat;
     height: 100vh;
     width: 100vw;
-    overflow-y: auto;
+    overflow-y: hidden;
     position: relative;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 footer {
-    position: fixed;
-    bottom: -0.4px;
+    position: relative;
+    bottom: 0px;
     width: 100%;
     height: 62px;
     background: linear-gradient(0deg, rgba(0, 0, 0, 0.537));
@@ -422,7 +422,6 @@ footer {
     flex-direction: column;
     gap: 12px;
     padding: 15px 0;
-    padding-bottom: 100px;
     height: 80vh;
     box-sizing: border-box;
     overflow-y: auto; /* Добавляем скроллбар при необходимости */
