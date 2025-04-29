@@ -80,7 +80,9 @@ header{
 .stats img{
     position: relative;
 }
-
+html{
+  overflow: hidden;
+}
 body {
     background-color: black;
     background-image: url('back.png');
@@ -95,8 +97,8 @@ body {
 }
 
 footer {
-    position: fixed;
-    bottom: -0.4px;
+    position: relative;
+    bottom: 0px;
     width: 100%;
     height: 62px;
     background: linear-gradient(0deg, rgba(0, 0, 0, 0.537));
