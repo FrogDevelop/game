@@ -80,9 +80,7 @@ header{
 .stats img{
     position: relative;
 }
-html{
-  overflow: hidden;
-}
+
 body {
     background-color: black;
     background-image: url('back.png');
@@ -97,8 +95,8 @@ body {
 }
 
 footer {
-    position: relative;
-    bottom: 0px;
+    position: fixed;
+    bottom: -0.4px;
     width: 100%;
     height: 62px;
     background: linear-gradient(0deg, rgba(0, 0, 0, 0.537));
@@ -373,11 +371,12 @@ footer {
 
 /* Контент (узкий центр + отступы) */
 .shop-content {
+    height: 100vh;
     width: 100%;
     padding-top: 100px;
     margin: 0 auto;
     background: rgba(0, 0, 0, 0.533);
-    min-height: 100vh;
+    min-height: 90vh;
     box-sizing: border-box;
 }
 
@@ -424,7 +423,7 @@ footer {
     gap: 12px;
     padding: 15px 0;
     padding-bottom: 100px;
-    min-height: 100vh;
+    height: 80vh;
     box-sizing: border-box;
     overflow-y: auto; /* Добавляем скроллбар при необходимости */
     max-height: 100vh; /* Ограничиваем высоту */
