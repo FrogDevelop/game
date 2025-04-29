@@ -89,20 +89,22 @@ body {
     background-repeat: no-repeat;
     height: 100vh;
     width: 100vw;
-    overflow-y: hidden;
+    overflow-y: none;
     position: relative;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 footer {
-    position: relative;
-    bottom: 0px;
+    position: fixed; /* Изменено с relative на fixed */
+    bottom: 0; /* Закрепляем в самом низу */
     width: 100%;
     height: 62px;
     background: linear-gradient(0deg, rgba(0, 0, 0, 0.537));
     z-index: 10;
     border-top-right-radius: 10px;
     border-top-left-radius: 10px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 .menu {
@@ -422,6 +424,7 @@ footer {
     flex-direction: column;
     gap: 12px;
     padding: 15px 0;
+    /* padding-bottom: 100px; */
     height: 80vh;
     box-sizing: border-box;
     overflow-y: auto; /* Добавляем скроллбар при необходимости */
