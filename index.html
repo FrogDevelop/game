@@ -7,7 +7,6 @@
     <title>medium Farm</title>
 </head>
 <body>
-
     <div id="loading-screen" class="loading-screen">
         <div class="loader-content">
           <img src="bud.png" alt="Loader Bud" class="loader-bud">
@@ -16,14 +15,12 @@
           </div>
         </div>
       </div>
-
     <header>
         <div class="stats">
             <div class="money">0</div>
             <img src="money.png" alt="">
         </div>
     </header>
-    
     <div class="lamp-conteiner">
         <div class="lamp">
             <img src="lamp.png" alt="">
@@ -50,9 +47,9 @@
     
     <div id="shop-modal">
         <div class="shop-content">
-            <button class="close-shop-button" id="close-shop-button">&times;</button>
-            <div class="shop-items">
-            </div>
+          <button class="close-shop-button" id="close-shop-button">&times;</button>
+          <h2 style="color: white; text-align: center; margin-bottom: 20px;">Магазин</h2>
+          <div class="shop-items"></div>
         </div>
     </div>
 
@@ -64,26 +61,6 @@
     </div>
 
     <div id="action-menu" class="action-menu hidden"></div>
-
-    <div id="product-modal" class="modal">
-        <div class="modal-content">
-            <span id="close-product-modal" class="close-button">&times;</span>
-            <img id="product-icon" src="" alt="Product Icon" class="modal-icon">
-            <h2 id="product-name"></h2>
-            <p id="product-description"></p>
-            <p id="product-benefit"></p>
-            <p id="product-price"></p>
-            <div id="quantity-container" style="display:block; margin-top:10px;">
-                <label for="quantity">Количество:</label>
-                <div id="quantity-controls">
-                    <button id="decrease-quantity" class="quantity-button">-</button>
-                    <input type="text" id="quantity" value="1" readonly style="width: 60px; text-align: center; background-color: #444; color: #fff; border: 1px solid #555;">
-                    <button id="increase-quantity" class="quantity-button">+</button>
-                </div>
-            </div>
-            <button id="confirm-buy" style="margin-top:15px;">Купить</button>
-        </div>
-    </div>
 
     <!-- Окно телефона -->
     <div id="messenger-modal" class="messenger-modal">
@@ -112,14 +89,15 @@
     </div>
 
     <div id="buff-status-container" class="buff-status-container"></div>
-    
+
     <footer>
         <div class="menu">
-            <button class="menu_button" id="shop_button"><img src="farm.png" alt="" style="height: 40px; width: 40px;"></button>
+            <button class="menu_button" id="shop_button"><img src="farm.png" alt=""></button>
             <button class="menu_button" id="darknet_button"><img src="phone.png" alt=""></button>
             <button class="menu_button" id="inventar_button"><img src="inventar.png" alt=""></button>
         </div>
     </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
