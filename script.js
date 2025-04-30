@@ -162,7 +162,6 @@ function activateBuff(buffId) {
     
     // Активируем эффект баффа
     buff.activate();
-    showNotification(`Бафф "${buff.name}" активирован!`);
     return true;
 }
 
