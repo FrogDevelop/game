@@ -6,15 +6,29 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-  window.addEventListener("DOMContentLoaded", () => {
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-    console.log("Viewport height:", tg.viewportHeight);
-    console.log("Viewport stable height:", tg.viewportStableHeight);
-    console.log("Is Expanded:", tg.isExpanded);
-    console.log("Platform:", tg.platform);
-  });
+        window.addEventListener("DOMContentLoaded", () => {
+        const tg = window.Telegram?.WebApp;
+            
+        if (tg) {
+        // Включаем Fullscreen (если поддерживается)
+        tg.expand(); // Расширяем на весь экран
+        tg.enableClosingConfirmation(); // Запрещаем случайное закрытие
+        tg.setHeaderColor('#111'); // Цвет верхней панели (если есть)
+        tg.setBackgroundColor('#111'); // Цвет фона за приложением
+            
+            // Проверяем, поддерживается ли Fullscreen
+        if (tg.isExpanded && tg.platform !== 'unknown') {
+            document.documentElement.style.height = '100vh';
+                document.body.style.height = '100vh';
+        }
+            
+        console.log('Telegram WebApp initialized:', {
+            isExpanded: tg.isExpanded,
+                viewportHeight: tg.viewportHeight,
+            platform: tg.platform
+        });
+        }
+        });
     </script>
     <title>medium Farm</title>
 </head>

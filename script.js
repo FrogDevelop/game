@@ -1,6 +1,16 @@
 const tg = window.Telegram?.WebApp;
 const isTelegram = !!tg;
 
+if (tg) {
+  // Проверяем, открыто ли в Fullscreen
+  if (!tg.isExpanded) {
+    tg.expand(); // Принудительно разворачиваем
+  }
+  
+  // Фиксируем размеры
+  document.documentElement.style.height = `${tg.viewportHeight}px`;
+  document.body.style.height = `${tg.viewportHeight}px`;
+}
 
 const _preloaderStart = Date.now();
 

@@ -82,12 +82,12 @@ header{
 }
 
 html, body {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    touch-action: manipulation;
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    touch-action: none !important;
 }
 
 body {
@@ -101,9 +101,15 @@ body {
     overflow: hidden;
     position: relative;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    position: fixed;
-    overscroll-behavior: none;
+    position: fixed !important;
+    overscroll-behavior: none !important;
 }
+
+@viewport {
+    width: device-width;
+    zoom: 1.0;
+    user-zoom: fixed;
+  }
 
 footer {
     position: fixed; /* Изменено с relative на fixed */
