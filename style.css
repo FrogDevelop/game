@@ -962,6 +962,11 @@ a:focus {
     align-items: center;
 }
 
+.slot img{
+    height: 50px;
+    width: auto;
+}
+
 .mixer-items {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -978,7 +983,10 @@ a:focus {
     cursor: pointer;
     transition: all 0.3s;
 }
-
+.mixer-item img{
+    height: 50px;
+    width: auto;
+}
 .mixer-item:hover {
     background: #444;
 }

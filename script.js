@@ -5,7 +5,8 @@ let playerMoney = parseInt(localStorage.getItem('playerMoney')) || 1000;
 let shishCount = parseInt(localStorage.getItem('shishCount')) || 0;
 let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
 let inventoryItems; 
-
+let baseItem = null;
+let additiveItem = null;
 // Активные бафы для растений
 let growthBoostActive = false;
 let yieldBoostActive = false;
@@ -162,6 +163,7 @@ function activateBuff(buffId) {
     
     // Активируем эффект баффа
     buff.activate();
+    showNotification(`Бафф "${buff.name}" активирован!`);
     return true;
 }
 
@@ -360,9 +362,7 @@ function openMixerInterface() {
 }
 
 function setupMixerDragAndDrop() {
-    let baseItem = null;
-    let additiveItem = null;
-    
+    // Убрали объявление переменных здесь, так как они теперь глобальные
     document.querySelectorAll('.mixer-item').forEach(item => {
         item.addEventListener('click', function() {
             const itemId = this.dataset.itemId;
@@ -380,6 +380,9 @@ function setupMixerDragAndDrop() {
     document.getElementById('mix-button').addEventListener('click', mixItems);
     document.getElementById('close-mixer').addEventListener('click', () => {
         document.getElementById('mixer-modal').remove();
+        // Сброс переменных при закрытии интерфейса
+        baseItem = null;
+        additiveItem = null;
     });
 }
 
@@ -449,8 +452,10 @@ function mixItems() {
         showNotification("Получена неизвестная субстанция...", true);
     }
     
-    // Закрываем интерфейс
+    // Закрываем интерфейс и сбрасываем переменные
     document.getElementById('mixer-modal').remove();
+    baseItem = null;
+    additiveItem = null;
 }
 
 // Показ меню действий
