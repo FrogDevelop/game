@@ -81,6 +81,15 @@ header{
     position: relative;
 }
 
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    touch-action: manipulation;
+}
+
 body {
     background-color: black;
     background-image: url('back.png');
@@ -92,6 +101,8 @@ body {
     overflow: hidden;
     position: relative;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: fixed;
+    overscroll-behavior: none;
 }
 
 footer {

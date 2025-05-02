@@ -1,3 +1,7 @@
+const tg = window.Telegram?.WebApp;
+const isTelegram = !!tg;
+
+
 const _preloaderStart = Date.now();
 
 // Глобальные переменные
@@ -1164,6 +1168,19 @@ function buyMixComponent(component) {
         showNotification("Недостаточно денег!", true);
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (isTelegram) {
+        // Отключаем масштабирование
+        tg.enableClosingConfirmation();
+        tg.setHeaderColor('#4CAF50');
+        tg.setBackgroundColor('#111');
+        
+        // Для отладки
+        console.log('Telegram WebApp initialized');
+        console.log('User:', tg.initDataUnsafe?.user);
+    }
+});
 
 // Загрузка
 window.addEventListener('load', () => {
