@@ -10,13 +10,9 @@
         const tg = window.Telegram?.WebApp;
             
         if (tg) {
-        // Включаем Fullscreen (если поддерживается)
-        tg.expand(); // Расширяем на весь экран
-        tg.enableClosingConfirmation(); // Запрещаем случайное закрытие
-        tg.setHeaderColor('#111'); // Цвет верхней панели (если есть)
-        tg.setBackgroundColor('#111'); // Цвет фона за приложением
+            tg.disableClosingConfirmation(); 
+            tg.expand();
             
-            // Проверяем, поддерживается ли Fullscreen
         if (tg.isExpanded && tg.platform !== 'unknown') {
             document.documentElement.style.height = '100vh';
                 document.body.style.height = '100vh';
@@ -122,9 +118,23 @@
 
     <footer>
         <div class="menu">
-            <button class="menu_button" id="shop_button"><img src="farm.png" alt=""></button>
-            <button class="menu_button" id="darknet_button"><img src="phone.png" alt=""></button>
-            <button class="menu_button" id="inventar_button"><img src="inventar.png" alt=""></button>
+            <div class="btn-cont">
+                <button class="menu_button" id="shop_button"><img src="shop.png" alt=""></button>
+                <p>Магазин</p>
+            </div>
+            <div class="btn-cont">
+                <button class="menu_button" id="darknet_button"><img src="phone.png" alt=""></button>
+                <p>Телефон</p>
+            </div>
+            <div class="btn-cont">
+                <button class="menu_button" id="map"><img src="map.png" alt=""></button>
+                <p>Карта</p>
+            </div>
+            <div class="btn-cont">
+                <button class="menu_button" id="inventar_button"><img src="inventory.png" alt=""></button>
+                <p>Инвентарь</p>
+            </div>
+
         </div>
     </footer>
 

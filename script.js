@@ -15,7 +15,7 @@ if (tg) {
 const _preloaderStart = Date.now();
 
 // Глобальные переменные
-let playerMoney = parseInt(localStorage.getItem('playerMoney')) || 1000;
+let playerMoney = parseInt(localStorage.getItem('playerMoney')) || 10000;
 let shishCount = parseInt(localStorage.getItem('shishCount')) || 0;
 let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
 let inventoryItems; 
@@ -666,19 +666,19 @@ document.addEventListener('DOMContentLoaded', () => {
             itemElement.dataset.itemId = item.id;
             
             itemElement.innerHTML = `
-                <img src="${item.image}" alt="${item.name}">
+                <div class="img-cnt"><img src="${item.image}" alt="${item.name}"></div>
                 <div class="item-info">
                     <div class="item-name">${item.name}</div>
                     <div class="item-description">${item.description}</div>
-                    <div class="item-price">${item.price} $</div>
+                    <div class="item-price">Цена: ${item.price} $</div>
                 </div>
                 <div class="buy-conteiner">
+                    <button class="buy-button">Купить</button>
                     <div class="quantity-controls">
                         <button class="quantity-button minus">-</button>
                         <div class="quantity">1</div>
                         <button class="quantity-button plus">+</button>
                     </div>
-                    <button class="buy-button">Купить</button>
                 </div>
             `;
             
