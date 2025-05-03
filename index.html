@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="stylesheet" href="style.css">
+    <audio id="harvest-sound" src="cut.mp3" preload="auto"></audio>
+    <audio id="buy-sound" src="pay.mp3" preload="auto"></audio>
+    <audio id="open-inv" src="inventory.mp3" preload="auto"></audio>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="icon.png" rel="icon">
     <script>
         window.addEventListener("DOMContentLoaded", () => {
         const tg = window.Telegram?.WebApp;
@@ -31,7 +35,7 @@
 <body>
     <div id="loading-screen" class="loading-screen">
         <div class="loader-content">
-          <img src="bud.png" alt="Loader Bud" class="loader-bud">
+          <img src="icon.png" alt="Loader Bud" class="loader-bud">
           <div class="loader-bar">
             <div class="loader-fill"></div>
           </div>
@@ -88,8 +92,6 @@
     <div id="messenger-modal" class="messenger-modal">
         <div class="phone-frame">
             <div class="messenger-header">
-                <div class="sound"></div>
-                <div class="cam"><div class="blik"></div></div>
             </div>
             <div id="chat-list" class="chat-list">
                 <div class="text-conteiner">
@@ -109,7 +111,7 @@
                 <div id="reply-buttons" class="reply-buttons"></div>
             </div>
             <div class="down-phone">
-                <div id="close-messenger"><img src="off.png" alt=""></div>
+                <div id="close-messenger"></div>
             </div>
         </div>
     </div>
@@ -123,18 +125,21 @@
                 <p>Магазин</p>
             </div>
             <div class="btn-cont">
-                <button class="menu_button" id="darknet_button"><img src="phone.png" alt=""></button>
-                <p>Телефон</p>
-            </div>
-            <div class="btn-cont">
                 <button class="menu_button" id="map"><img src="map.png" alt=""></button>
                 <p>Карта</p>
+            </div>
+            <div class="btn-cont">
+                <button class="menu_button" id="darknet_button"><img src="phone.png" alt=""></button>
+                <p>Телефон</p>
             </div>
             <div class="btn-cont">
                 <button class="menu_button" id="inventar_button"><img src="inventory.png" alt=""></button>
                 <p>Инвентарь</p>
             </div>
-
+            <div class="btn-cont">
+                <button class="menu_button" id="wallet_button"><img src="wallet.png" alt=""></button>
+                <p>Кошелек</p>
+            </div>
         </div>
     </footer>
 

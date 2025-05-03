@@ -37,7 +37,6 @@
   .loader-bar {
     width: 200px;
     height: 8px;
-    background: #333;
     border-radius: 4px;
     overflow: hidden;
     margin: 20px auto 0;
@@ -46,7 +45,7 @@
   .loader-fill {
     width: 0;
     height: 100%;
-    background: #4caf50; /* фирменный зелёный */
+    background: #4caf50;
     animation: fillBar 5s linear forwards;
   }
   
@@ -724,63 +723,49 @@ a:focus {
 }
 
 .phone-frame {
-    background-color: #46633bb3;
+    background: linear-gradient(200deg,#53a995 29%, rgba(18, 161, 75, 1) 100%);
     width:90%;
     max-width: 380px;
     height: 90%;
-    border-radius: 30px;
+    border-radius: 50px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     position: relative;
-    outline: solid 9px #ffffff;
+    outline: solid 3px #ffffff;
+    border: solid 8px #000000;
 }
 
 .messenger-header {
-    background: #ffffff;
-    padding: 15px;
-    text-align: center;
-    position: relative;
-    height: 60px;
     display: flex;
     justify-content: center;
     align-items: center;
-    
+    position: fixed;
+    width: 100px;
+    height:30px;
+    top: 7%;
+    left: 50%;
+    text-align: center;
+    background: #000000;
+    border-radius: 20px;
+    transform: translate(-50%);
 }
 .down-phone {
-    background: #ffffff;
+    left: 50%;
+    transform: translate(-50%);
+    position: fixed;
+    background: #ffffff00;
     width: 100%;
-    height: 60px;
+    height: min-content;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items:flex-end;
+    bottom: 6.5%;
 }
-.sound{
-    background-color: black;
-    height: 12px;
-    width: 70px;
-    border-radius: 100px;
-}
-.cam{
-    position: relative;
-    left: 10px;
-    width: 12px;
-    height: 12px;
-    background-color: black;
-    border-radius: 100px;
-}
-.blik{
-    position: relative;
-    left: 7px;
-    top: 2px;
-    background-color: rgba(255, 255, 255, 0.384);
-    height: 3px;
-    width: 3px;
-    border-radius: 100px;
-}
+
 .text-conteiner{
     position: relative;
-    top: 5px;
+    top: 20px;
     display: flex;
     justify-content: center; /* Центрируем по горизонтали */
     align-items: center; /* Центрируем по вертикали */
@@ -788,6 +773,9 @@ a:focus {
 .chat-list {
     flex: 1;
     overflow-y: auto;
+    width: 100%;
+    height: 100%;
+    padding-top: 30px;
 }
 
 .chat-item {
@@ -823,6 +811,7 @@ a:focus {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 .hidden {
@@ -833,6 +822,7 @@ a:focus {
     flex: 1;
     padding: 15px;
     overflow-y: auto;
+    padding-top: 50px;
 }
 
 .message {
@@ -851,6 +841,8 @@ a:focus {
 
 .reply-buttons {
     padding: 10px;
+    /* padding-bottom: 10px; */
+    margin-bottom: 15px;
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
@@ -873,12 +865,9 @@ a:focus {
     position: relative;
     color: white;
     cursor: pointer;
-    width: 50px;
-    height: 50px;
-    display: flex; /* Включаем Flexbox */
-    justify-content: center; /* Центрируем по горизонтали */
-    align-items: center; /* Центрируем по вертикали */
-    background-color: #444;
+    width: 150px;
+    height: 5px;
+    background-color: #ffffff;
     border-radius: 100px;
 }
 #close-messenger img{

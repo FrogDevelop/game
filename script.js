@@ -43,6 +43,14 @@ const shopItems = [
       description: 'Эксклюзивный продукт для максимального эффекта.', displayName: 'редких удобрителей', quantitySelectable: true }
 ];
 
+function playSound(id) {
+    const sound = document.getElementById(id);
+    if (sound) {
+        sound.currentTime = 0;
+        sound.play().catch(e => console.log('Sound play failed:', e));
+    }
+}
+
 const buffEffects = {
     growthBoost: {
         name: "Ускоренный рост",
@@ -690,6 +698,8 @@ document.addEventListener('DOMContentLoaded', () => {
         inventoryBtn.addEventListener('click', () => {
             inventoryModal.classList.add('open');
             updateInventory();
+            playSound('open-inv');
+            
         });
     }
 
@@ -727,6 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         bud.classList.add('collecting');
         createLeaves(bud);
+        playSound('harvest-sound');
     
         setTimeout(() => {
             bud.classList.remove('collecting');
@@ -853,6 +864,7 @@ function buyItem(id, quantity, event) {
         localStorage.setItem('playerMoney', playerMoney);
         updateMoneyDisplay();
         updateInventory();
+        playSound('buy-sound');
         
         let itemName;
         if (quantity === 1) {
