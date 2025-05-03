@@ -723,7 +723,7 @@ a:focus {
 }
 
 .phone-frame {
-    background: linear-gradient(200deg,#53a995 29%, rgba(18, 161, 75, 1) 100%);
+    background: #222;
     width:90%;
     max-width: 380px;
     height: 90%;
@@ -841,7 +841,6 @@ a:focus {
 
 .reply-buttons {
     padding: 10px;
-    /* padding-bottom: 10px; */
     margin-bottom: 15px;
     display: flex;
     gap: 10px;
@@ -863,16 +862,11 @@ a:focus {
 }
 #close-messenger {
     position: relative;
-    color: white;
     cursor: pointer;
     width: 150px;
     height: 5px;
     background-color: #ffffff;
     border-radius: 100px;
-}
-#close-messenger img{
-    height: 35px;
-    width: 35px;
 }
 
 /*--------------------------------------------------------- Darknet-модалка----------------------------------------------------*/
