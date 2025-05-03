@@ -737,7 +737,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
         bud.classList.add('collecting');
         createLeaves(bud);
-        playSound('harvest-sound');
     
         setTimeout(() => {
             bud.classList.remove('collecting');
