@@ -15,7 +15,7 @@ if (tg) {
 const _preloaderStart = Date.now();
 
 // Глобальные переменные
-let playerMoney = parseInt(localStorage.getItem('playerMoney')) || 10000;
+let playerMoney = parseInt(localStorage.getItem('playerMoney')) || 1000;
 let shishCount = parseInt(localStorage.getItem('shishCount')) || 0;
 let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
 let inventoryItems; 
