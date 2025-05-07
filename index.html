@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="icon.png" rel="icon">
     <script>
         window.addEventListener("DOMContentLoaded", () => {
@@ -86,44 +87,45 @@
     <div id="action-menu" class="action-menu hidden"></div>
 
     <!-- Окно телефона -->
-    <div id="messenger-modal" class="messenger-modal">
-        <div class="phone-frame">
-            <div class="messenger-header">
-            </div>
-            <div id="chat-list" class="chat-list">
-                <div class="text-conteiner">
-                    <h2 style="color: white;">Чаты</h2>
-                </div>
-                <div class="chat-item" id="uncle-redji">
-                    <img src="uncle.png" alt="Дядя Реджи" class="avatar">
-                    <span style="color: white;">Дядя Реджи</span>
-                </div>
-                <div id="sylvester-chat" class="chat-item">
-                    <img src="sylvester.png" alt="Сильвестр" class="avatar">
-                    <span style="color: white;">Сильвестр</span>
+<!-- Окно телефона -->
+<div id="phone-modal" class="phone-modal">
+    <div class="phone-frame">
+        <div class="phone-header"></div>
+        <div class="phone-screen">
+            <!-- Главный экран -->
+            <div class="home-screen">
+                <div class="phone-apps">
+                    <div class="phone-app" data-app="chats" style="background-color: rgb(47, 203, 0);">
+                        <img src="chat.png" alt="Чаты">
+                    </div>
+                    
                 </div>
             </div>
-            <div id="chat-window" class="chat-window">
-                <div id="messages" class="messages"></div>
-                <div id="reply-buttons" class="reply-buttons"></div>
-            </div>
-            <div class="down-phone">
-                <div id="close-messenger"></div>
+            
+            <!-- Экран приложения (изначально скрыт) -->
+            <div class="app-screen" style="display: none;">
+                <div class="app-header">
+                    <button class="back-button">← Назад</button>
+                    <h2 class="app-title"></h2>
+                </div>
+                <div class="app-content"></div>
             </div>
         </div>
+        
+        <div class="phone-footer">
+            <div id="close-phone" class="close-phone-button"></div>
+        </div>
     </div>
+</div>
+
 
     <div id="buff-status-container" class="buff-status-container"></div>
-
+    
     <footer>
         <div class="menu">
             <div class="btn-cont">
                 <button class="menu_button" id="shop_button"><img src="shop.png" alt=""></button>
                 <p>Магазин</p>
-            </div>
-            <div class="btn-cont">
-                <button class="menu_button" id="map"><img src="map.png" alt=""></button>
-                <p>Карта</p>
             </div>
             <div class="btn-cont">
                 <button class="menu_button" id="darknet_button"><img src="phone.png" alt=""></button>

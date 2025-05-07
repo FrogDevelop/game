@@ -1,27 +1,47 @@
 const tg = window.Telegram?.WebApp;
 const isTelegram = !!tg;
 
+function getReputationTitle(reputation) {
+    if (reputation >= 1000) return "Legend";
+    if (reputation >= 500) return "Veteran";
+    if (reputation >= 200) return "Experienced";
+    if (reputation >= 100) return "Intermediate";
+    if (reputation >= 50) return "Beginner";
+    return "Newbie";
+}
+
+function openBuyInterface(app) {
+    alert("Открыт интерфейс покупки для: " + (app?.name || "неизвестного товара"));
+    // Здесь можно добавить отображение интерфейса покупки, создание модального окна и т.п.
+}
+
+function getDarkItemImage(id) {
+    return `zip_shishka.png`; // или путь, который у тебя в проекте
+}
+
 if (tg) {
-  // Проверяем, открыто ли в Fullscreen
   if (!tg.isExpanded) {
-    tg.expand(); // Принудительно разворачиваем
+    tg.expand(); 
   }
   
-  // Фиксируем размеры
   document.documentElement.style.height = `${tg.viewportHeight}px`;
   document.body.style.height = `${tg.viewportHeight}px`;
 }
 
 const _preloaderStart = Date.now();
 
-// Глобальные переменные
-let playerMoney = parseInt(localStorage.getItem('playerMoney')) || 1000;
+
+// Добавьте в начало script.js с другими переменными
+let darknetReputation = parseInt(localStorage.getItem('darknetReputation')) || 0;
+let darknetUnlocked = localStorage.getItem('darknetUnlocked') === 'true';
+
+let playerMoney = parseInt(localStorage.getItem('playerMoney')) || 500;
 let shishCount = parseInt(localStorage.getItem('shishCount')) || 0;
 let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
 let inventoryItems; 
 let baseItem = null;
 let additiveItem = null;
-// Активные бафы для растений
+
 let growthBoostActive = false;
 let yieldBoostActive = false;
 let rareHarvestActive = false;
@@ -42,7 +62,6 @@ const shopItems = [
     { id: 'rare_fertilizer', name: 'Редкий удобритель', price: 300, type: 'rare_fertilizer', image: 'rare_fertilizer.png',
       description: 'Эксклюзивный продукт для максимального эффекта.', displayName: 'редких удобрителей', quantitySelectable: true }
 ];
-
 
 const buffEffects = {
     growthBoost: {
@@ -83,9 +102,7 @@ const buffEffects = {
     }
 };
 
-// Добавляем функцию showNotification в начало кода
 function showNotification(text, isError = false) {
-    // Создаем элемент уведомления, если его еще нет
     let notificationContainer = document.getElementById('notification-container');
     if (!notificationContainer) {
         notificationContainer = document.createElement('div');
@@ -120,13 +137,11 @@ function showNotification(text, isError = false) {
     
     notificationContainer.appendChild(notification);
     
-    // Анимация появления
     setTimeout(() => {
         notification.style.opacity = '1';
         notification.style.transform = 'translateY(0)';
     }, 10);
     
-    // Автоматическое исчезновение через 3 секунды
     setTimeout(() => {
         notification.style.opacity = '0';
         notification.style.transform = 'translateY(-20px)';
@@ -143,7 +158,6 @@ function activateBuff(buffId) {
     const buff = buffEffects[buffId];
     if (!buff) return false;
 
-    // Создаем визуальное отображение баффа
     const buffContainer = document.getElementById('buff-status-container');
     if (!buffContainer) return false;
 
@@ -176,7 +190,6 @@ function activateBuff(buffId) {
     const interval = setInterval(updateTimer, 1000);
     activeBuffs[buffId] = { interval, element: buffElement };
     
-    // Активируем эффект баффа
     buff.activate();
     return true;
 }
@@ -228,7 +241,6 @@ function applySuperFood(itemId) {
                    'Супер-питание применено! 10% шанс получить 5 шишек вместо 1.');
 }
 
-// Отключение зума на мобильных устройствах
 document.addEventListener('touchstart', function(e) {
     if (e.touches.length > 1) {
         e.preventDefault();
@@ -290,14 +302,12 @@ function updateInventory() {
 
 function getItemImage(id) {
     const items = {
-        'mixer_machine': 'mixer.png',
         'shishka': 'bud.png',
         'fertilizer': 'fertilizer.png',
         'zip': 'zip.png',
         'zip_shishka': 'zip_shishka.png',
         'plant_food': 'plant_food.png',
         'pot': 'pot.png',
-        'light': 'light.png',
         'booster': 'booster.png',
         'rare_fertilizer': 'rare_fertilizer.png',
         'super_food': 'super_food.png'
@@ -338,141 +348,6 @@ function openItemActions(itemId, targetElement) {
     showActionMenu(actions, targetElement);
 }
 
-function openMixerInterface() {
-    // Закрываем инвентарь
-    document.getElementById('inventory-modal').classList.remove('open');
-    
-    // Создаем интерфейс смешивания
-    const mixerModal = document.createElement('div');
-    mixerModal.id = 'mixer-modal';
-    mixerModal.innerHTML = `
-        <div class="mixer-container">
-            <h3>Машинка для смешивания</h3>
-            <div class="mixer-slots">
-                <div class="slot" id="slot-base"></div>
-                <div class="mixer-plus">+</div>
-                <div class="slot" id="slot-additive"></div>
-                <div class="mixer-equals">=</div>
-                <div class="slot" id="slot-result"></div>
-            </div>
-            <div class="mixer-items">
-                ${Object.entries(inventory)
-                  .filter(([id, item]) => id === 'shishka' || item.type === 'mix_component')
-                  .map(([id, item]) => `
-                    <div class="mixer-item" data-item-id="${id}">
-                        <img src="${getItemImage(id)}" alt="${item.name}">
-                        <span>${item.name} (${item.count})</span>
-                    </div>
-                  `).join('')}
-            </div>
-            <button id="mix-button">Смешать</button>
-            <button id="close-mixer">Закрыть</button>
-        </div>
-    `;
-    document.body.appendChild(mixerModal);
-    
-    // Логика перетаскивания предметов
-    setupMixerDragAndDrop();
-}
-
-function setupMixerDragAndDrop() {
-    // Убрали объявление переменных здесь, так как они теперь глобальные
-    document.querySelectorAll('.mixer-item').forEach(item => {
-        item.addEventListener('click', function() {
-            const itemId = this.dataset.itemId;
-            if (!baseItem) {
-                baseItem = itemId;
-                document.getElementById('slot-base').innerHTML = this.innerHTML;
-            } else if (!additiveItem && itemId !== baseItem) {
-                additiveItem = itemId;
-                document.getElementById('slot-additive').innerHTML = this.innerHTML;
-                showPossibleResult();
-            }
-        });
-    });
-    
-    document.getElementById('mix-button').addEventListener('click', mixItems);
-    document.getElementById('close-mixer').addEventListener('click', () => {
-        document.getElementById('mixer-modal').remove();
-        // Сброс переменных при закрытии интерфейса
-        baseItem = null;
-        additiveItem = null;
-    });
-}
-
-function showPossibleResult() {
-    const resultSlot = document.getElementById('slot-result');
-    
-    // Определяем результат смешивания
-    let resultItem = null;
-    if (baseItem === 'shishka' && additiveItem === 'mix_herbs') {
-        resultItem = { id: 'shishka_herb', name: "Травяные шишки" };
-    } 
-    // Добавьте другие комбинации...
-    
-    if (resultItem) {
-        resultSlot.innerHTML = `
-            <img src="${getItemImage(resultItem.id)}" alt="${resultItem.name}">
-            <span>${resultItem.name}</span>
-        `;
-    } else {
-        resultSlot.innerHTML = "<span>Неизвестный результат</span>";
-    }
-}
-
-function mixItems() {
-    if (!baseItem || !additiveItem) {
-        showNotification("Выберите два разных ингредиента!", true);
-        return;
-    }
-    
-    // Проверяем, есть ли ингредиенты
-    if (inventory[baseItem].count < 1 || inventory[additiveItem].count < 1) {
-        showNotification("Недостаточно ингредиентов!", true);
-        return;
-    }
-    
-    // Уменьшаем количество ингредиентов
-    decreaseItem(baseItem, 1);
-    decreaseItem(additiveItem, 1);
-    
-    // Определяем результат
-    let resultItem = null;
-    if (baseItem === 'shishka' && additiveItem === 'mix_herbs') {
-        resultItem = { 
-            id: 'shishka_herb', 
-            name: "Травяные шишки",
-            type: "product",
-            effect: "Дают больше урожая"
-        };
-    }
-    // Добавьте другие комбинации...
-    
-    if (resultItem) {
-        // Добавляем результат в инвентарь
-        if (!inventory[resultItem.id]) {
-            inventory[resultItem.id] = { 
-                count: 0, 
-                type: resultItem.type, 
-                name: resultItem.name 
-            };
-        }
-        inventory[resultItem.id].count += 1;
-        saveInventory();
-        updateInventory();
-        
-        showNotification(`Получено: ${resultItem.name}! ${resultItem.effect || ''}`);
-    } else {
-        showNotification("Получена неизвестная субстанция...", true);
-    }
-    
-    // Закрываем интерфейс и сбрасываем переменные
-    document.getElementById('mixer-modal').remove();
-    baseItem = null;
-    additiveItem = null;
-}
-
-// Показ меню действий
 function showActionMenu(actions, targetElement) {
     const actionMenu = document.getElementById('action-menu');
     if (!actionMenu) return;
@@ -500,15 +375,13 @@ function showActionMenu(actions, targetElement) {
 
 function positionActionMenu(menu, target) {
     const rect = target.getBoundingClientRect();
-    menu.style.visibility = 'hidden'; // Сначала скрываем
+    menu.style.visibility = 'hidden'; 
     menu.classList.remove('hidden');
     
-    // Принудительно применяем стили и получаем размеры
     const menuRect = menu.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     
-    // Рассчитываем позиции для всех вариантов
     const positions = {
         right: {
             left: rect.right + 5,
@@ -524,7 +397,6 @@ function positionActionMenu(menu, target) {
         }
     };
     
-    // Выбираем лучшую позицию
     let bestPosition = positions.right;
     
     if (positions.right.left + menuRect.width > viewportWidth) {
@@ -535,11 +407,9 @@ function positionActionMenu(menu, target) {
         }
     }
     
-    // Гарантируем, что меню не выйдет за границы
     bestPosition.left = Math.max(10, Math.min(bestPosition.left, viewportWidth - menuRect.width - 10));
     bestPosition.top = Math.max(10, Math.min(bestPosition.top, viewportHeight - menuRect.height - 10));
     
-    // Применяем финальную позицию
     menu.style.cssText = `
         position: fixed;
         left: ${bestPosition.left}px;
@@ -551,13 +421,11 @@ function positionActionMenu(menu, target) {
     `;
 }
 
-// Скрытие меню
 function hideActionMenu() {
     const actionMenu = document.getElementById('action-menu');
     if (actionMenu) actionMenu.classList.add('hidden');
 }
 
-// Закрытие меню при клике вне его
 document.addEventListener('click', (e) => {
     const actionMenu = document.getElementById('action-menu');
     if (actionMenu && !actionMenu.contains(e.target) && !e.target.closest('.inventory-item')) {
@@ -623,9 +491,7 @@ function saveInventory() {
     localStorage.setItem('inventory', JSON.stringify(inventory));
 }
 
-// Инициализация при загрузке DOM
 document.addEventListener('DOMContentLoaded', () => {
-    // Инициализация элементов интерфейса
     const inventoryBtn = document.getElementById('inventar_button');
     const inventoryModal = document.getElementById('inventory-modal');
     const closeModalBtn = document.getElementById('close-inventory');
@@ -640,9 +506,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const darknetButton = document.getElementById('darknet_button');
     
 
-    // Магазин
 
-    // Функции для работы с магазином
+
+    // Магазин
     function showShop() {
         if (shopModal) {
             shopModal.classList.add('open');
@@ -686,7 +552,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Обработчики событий
     if (inventoryBtn && inventoryModal) {
         inventoryBtn.addEventListener('click', () => {
             inventoryModal.classList.add('open');
@@ -711,11 +576,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (darknetButton) {
-        darknetButton.addEventListener('click', openMessenger);
-    }
-
-    // Работа с растениями
     function showBud(bud) {
         if (!bud) return;
         
@@ -734,19 +594,18 @@ document.addEventListener('DOMContentLoaded', () => {
             bud.classList.remove('collecting');
             bud.style.cssText = 'transform: scale(0); opacity: 0;';
     
-            let harvestedCount = 1; // Базовая урожайность
+            let harvestedCount = 1; 
             
-            // Применяем эффекты баффов
             if (yieldBoostActive) {
-                harvestedCount += 1; // +1 шишка всегда
+                harvestedCount += 1; 
             }
             
             if (rareHarvestActive && Math.random() < 0.5) {
-                harvestedCount += 1; // 50% шанс +1 шишка
+                harvestedCount += 1; 
             }
             
             if (superFoodActive && Math.random() < 0.1) {
-                harvestedCount += 4; // 10% шанс +4 шишки (итого 5)
+                harvestedCount += 4; 
             }
     
             if (!inventory['shishka']) {
@@ -757,7 +616,6 @@ document.addEventListener('DOMContentLoaded', () => {
             saveInventory();
             updateInventory();
     
-            // Время респавна зависит от баффа роста
             const respawnTime = growthBoostActive ? 1000 : 5000;
             setTimeout(() => showBud(bud), respawnTime);
         }, 1000);
@@ -795,13 +653,11 @@ document.addEventListener('DOMContentLoaded', () => {
         bud.addEventListener('click', () => hideBud(bud));
     });
 
-    // Инициализация денег
     updateMoneyDisplay();
 });
 
-// Обработка магазина через делегирование событий
 document.addEventListener('click', function(e) {
-    // Кнопки +/-
+
     if (e.target.classList.contains('plus')) {
         const control = e.target.closest('.quantity-controls');
         if (control) {
@@ -826,7 +682,6 @@ document.addEventListener('click', function(e) {
         }
     }
     
-    // Кнопка Купить
     if (e.target.classList.contains('buy-button')) {
         const itemElement = e.target.closest('.shop-item');
         if (itemElement) {
@@ -876,330 +731,843 @@ function buyItem(id, quantity, event) {
     }
 }
 
-// Мессенджер (Darknet)
-const messengerModal = document.getElementById('messenger-modal');
-const closeMessengerBtn = document.getElementById('close-messenger');
-const chatList = document.getElementById('chat-list');
-const chatWindow = document.getElementById('chat-window');
-const messages = document.getElementById('messages');
-const replyButtons = document.getElementById('reply-buttons');
-const uncleRedji = document.getElementById('uncle-redji');
-const sylvesterChat = document.getElementById('sylvester-chat');
+//________________________________________________________________________________Мессенджер (Darknet)
+const Phone = (() => {
 
-// Открытие/закрытие мессенджера
-function openMessenger() {
-    if (messengerModal) {
-        messengerModal.classList.add('open');
-        chatWindow?.classList.add('hidden');
-        chatList?.classList.remove('hidden');
-    }
-}
-
-function closeMessenger() {
-    messengerModal?.classList.remove('open');
-}
-
-closeMessengerBtn?.addEventListener('click', closeMessenger);
-
-if (sylvesterChat) {
-    sylvesterChat.addEventListener('click', () => {
-        chatList.classList.add('hidden');
-        chatWindow.classList.remove('hidden');
-        startChatWithSylvester();
-    });
-}
-
-function startChatWithSylvester() {
-    messages.innerHTML = '';
-    replyButtons.innerHTML = '';
-
-    addMessage("bot", "Йоу, ковбой! Я Сильвестр - король миксологии.");
-    
-    setTimeout(() => {
-        const options = [];
+    function openApp(appId) {
+        if (!apps[appId]) return;
         
-        // Проверяем, куплена ли уже машинка
-        if (!inventory['mixer_machine']) {
-            options.push({ 
-                text: "Купить машинку для смешивания ($2000)", 
-                action: () => offerMixerMachine() 
-            });
+        const phoneHeader = document.querySelector('.phone-header');
+        phoneHeader.innerHTML = `
+            <button class="back-button">←</button>
+            <span>${apps[appId].title}</span>
+        `;
+        
+        phoneHeader.querySelector('.back-button').addEventListener('click', goHome);
+        
+        document.querySelector('.home-screen').style.display = 'none';
+        document.querySelector('.app-screen').style.display = 'block';
+        
+        apps[appId].init();
+    }
+
+    function goHome() {
+        const phoneHeader = document.querySelector('.phone-header');
+        phoneHeader.innerHTML = ''; 
+        
+        document.querySelector('.app-screen').style.display = 'none';
+        document.querySelector('.home-screen').style.display = 'block';
+    }
+
+    let elements = {};
+    
+    const apps = {
+        chats: {
+            title: "Чаты",
+            init: initChatsApp
+        },
+        darknet: {
+            title: "Darknet",
+            init: initDarknetApp
+        }
+    };
+
+    function initElements() {
+        elements = {
+            phoneModal: document.getElementById('phone-modal'),
+            homeScreen: document.querySelector('.home-screen'),
+            appScreen: document.querySelector('.app-screen'),
+            appTitle: document.querySelector('.app-title'),
+            appContent: document.querySelector('.app-content'),
+            closeBtn: document.querySelector('.close-phone-button'),
+            darknetButton: document.getElementById('darknet_button')
+        };
+    }
+
+    function initChatsApp() {
+        if (!elements.appContent) return;
+        
+        elements.appContent.innerHTML = `
+            <div class="chat-list">
+                <div class="chat-item" data-contact="uncle">
+                    <img src="uncle.png" alt="Дядя Реджи">
+                    <span>Дядя Реджи</span>
+                </div>
+                <div class="chat-item" data-contact="sylvester">
+                    <img src="sylvester.png" alt="Сильвестр">
+                    <span>Сильвестр</span>
+                </div>
+            </div>
+        `;
+
+        setTimeout(() => {
+            const chatItems = document.querySelectorAll('.chat-item');
+            if (chatItems.length) {
+                chatItems.forEach(item => {
+                    item.addEventListener('click', function() {
+                        const contact = this.dataset.contact;
+                        openChat(contact);
+                    });
+                });
+            }
+        }, 0);
+    }
+
+    function openChat(contact) {
+        if (!elements.appContent) return;
+        
+        elements.appContent.innerHTML = `
+            <div class="chat-window">
+                <div class="messages"></div>
+                <div class="reply-buttons"></div>
+            </div>
+        `;
+        
+        if (contact === 'uncle') startChatWithUncle();
+        else if (contact === 'sylvester') startChatWithSylvester();
+    }
+
+    function openApp(appId) {
+        if (!apps[appId] || !elements.appTitle || !elements.appContent) return;
+        
+        elements.appTitle.textContent = apps[appId].title;
+        apps[appId].init();
+        elements.homeScreen.style.display = 'none';
+        elements.appScreen.style.display = 'block';
+    }
+
+    function goHome() {
+        if (!elements.homeScreen || !elements.appScreen) return;
+        
+        elements.homeScreen.style.display = 'block';
+        elements.appScreen.style.display = 'none';
+    }
+
+    function open() {
+        if (!elements.phoneModal) return;
+        
+        // Сброс состояния перед открытием
+        elements.phoneModal.style.display = 'flex';
+        elements.phoneModal.classList.remove('closing');
+        
+        // Запуск анимации после небольшой задержки
+        setTimeout(() => {
+            elements.phoneModal.classList.add('open');
+        }, 10);
+        
+        goHome();
+    }
+
+    function close() {
+        if (!elements.phoneModal) return;
+        
+        // Начинаем анимацию закрытия
+        elements.phoneModal.classList.add('closing');
+        elements.phoneModal.classList.remove('open');
+        
+        // Полное скрытие после анимации
+        setTimeout(() => {
+            elements.phoneModal.style.display = 'none';
+            elements.phoneModal.classList.remove('closing');
+        }, 400); // Должно совпадать с длительностью анимации
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        Phone.init();
+    });
+
+
+    const phoneApps = document.querySelectorAll('.phone-app');
+    function init() {
+        initElements();
+        const phoneAppsContainer = document.querySelector('.phone-apps');
+        if (phoneAppsContainer && !document.querySelector('.phone-app[data-app="darknet"]')) {
+            const darknetApp = document.createElement('div');
+            darknetApp.className = 'phone-app';
+            darknetApp.dataset.app = 'darknet';
+            darknetApp.style.backgroundColor = '#000';
+            darknetApp.innerHTML = `
+                <img src="darknet.png" alt="Darknet">
+            `;
+            phoneAppsContainer.appendChild(darknetApp);
+        }
+    
+        if (elements.closeBtn) {
+            elements.closeBtn.addEventListener('click', close);
         }
         
-        // Всегда показываем вариант с препаратами
-        options.push({ 
-            text: "Посмотреть препараты для смешивания", 
-            action: () => showMixComponents() 
+        // Добавьте этот обработчик
+        document.querySelectorAll('.phone-app').forEach(app => {
+            app.addEventListener('click', function() {
+                openApp(this.dataset.app);
+            });
         });
+    
+        const backButton = document.querySelector('.back-button');
+        if (backButton) {
+            backButton.addEventListener('click', goHome);
+        }
         
-        options.push({ text: "Назад", action: () => chatList.classList.remove('hidden') });
+        if (elements.darknetButton) {
+            elements.darknetButton.addEventListener('click', open);
+        }
+    }
+
+    return { init, open, close };
+})();
+
+function unlockDarknet() {
+    darknetUnlocked = true;
+    localStorage.setItem('darknetUnlocked', 'true');
+    
+    const phoneApps = document.querySelector('.phone-apps');
+    if (phoneApps) {
+        const darknetApp = document.createElement('div');
+        darknetApp.className = 'phone-app';
+        darknetApp.dataset.app = 'darknet';
+        darknetApp.style.backgroundColor = '#000';
+        darknetApp.innerHTML = `
+            <img src="darknet.png" alt="Darknet">
+        `;
+        phoneApps.appendChild(darknetApp);
         
-        setReplyOptions(options);
-    }, 1000);
+        // Добавляем обработчик клика для нового приложения
+        darknetApp.addEventListener('click', function() {
+            openApp('darknet');
+        });
+    }
+    
+    addMessage('uncle', "Вот тебе доступ к Darknet Market. Будь осторожен!");
+    addMessage('system', 'Darknet Market теперь доступен в вашем телефоне');
 }
 
-// Начало диалога
-uncleRedji?.addEventListener('click', () => {
-    chatList?.classList.add('hidden');
-    chatWindow?.classList.remove('hidden');
-    startChatWithUncle();
-});
+let uncleDeals = parseInt(localStorage.getItem('uncleDeals')) || 0;
+const MAX_DEALS = 5;
+let uncleStoppedBuying = localStorage.getItem('uncleStoppedBuying') === 'true';
+let currentDealPrice = parseInt(localStorage.getItem('currentDealPrice')) || 0;
+
+if (currentDealPrice === 0) {
+    currentDealPrice = generateRandomPrice();
+    localStorage.setItem('currentDealPrice', currentDealPrice);
+}
+
+const dialogs = {
+    uncle: {
+        start: {
+            message: "Ну что, мелкий, есть чем поделиться?",
+            replies: [
+                { 
+                    text: "Продать через даркнет", 
+                    next: "darknet_advice" 
+                },
+                { 
+                    text: "Продать тебе", 
+                    condition: () => uncleDeals < MAX_DEALS,
+                    next: "selling_options" 
+                },
+                {
+                    text: "Ничего",
+                    next: null
+                }
+            ]
+        },
+        darknet_advice: {
+            message: "Darknet - рискованно, но прибыльно. Риск конфискации 30%, но цены в 2-3 раза выше.",
+            replies: [
+                {
+                    text: "Понял",
+                    next: "start"
+                }
+            ]
+        },
+        selling_options: {
+            message: `Сколько скинешь? (${generateRandomPrice()}$ за упаковку)`,
+            replies: [
+                { 
+                    text: "Не жмоть, давай нормально", 
+                    action: () => negotiateBetterPrice()
+                },
+                { 
+                    text: "5 упаковок", 
+                    condition: () => inventory['zip_shishka']?.count >= 5,
+                    action: () => completeDeal(5)
+                },
+                { 
+                    text: "Все что есть", 
+                    condition: () => inventory['zip_shishka']?.count > 0,
+                    action: () => completeDeal(inventory['zip_shishka'].count)
+                },
+                { 
+                    text: "Передумал", 
+                    next: "start"
+                }
+            ]
+        },
+        
+        darknet_offer: {
+            message: "Хочешь научиться продавать через даркнет? Там цены в 2 раза выше, но и риск соответствующий.",
+            replies: [
+                {
+                    text: "Расскажи подробнее",
+                    next: "darknet_explain"
+                },
+                {
+                    text: "Не сейчас",
+                    next: "start"
+                }
+            ]
+        },
+        
+        darknet_explain: {
+            message: "Тебе понадобится: 1) Тор браузер 2) Криптовалюта 3) Репутация. Когда будешь готов - заходи.",
+            replies: [
+                {
+                    text: "Я готов сейчас",
+                    action: () => unlockDarknet()
+                },
+                {
+                    text: "Понял, позже",
+                    next: "start"
+                }
+            ]
+        },
+        darknet_explain: {
+            message: function() {
+                return darknetReputation < 5 ? 
+                    "Тебе понадобится: 1) Тор браузер 2) Криптовалюта 3) Репутация. Начни с малого." :
+                    `Твоя репутация: ${darknetReputation}/10. Продолжай в том же духе!`;
+            },
+            replies: [
+                {
+                    text: "Как повысить репутацию?",
+                    next: "reputation_help"
+                },
+                {
+                    text: "Понял, позже",
+                    next: "start"
+                }
+            ]
+        },
+        reputation_help: {
+            message: "Репутация растет при успешных сделках. Чем больше продашь - тем лучше цены и ниже риски.",
+            replies: [
+                {
+                    text: "Спасибо за совет",
+                    next: "start"
+                }
+            ]
+        }
+    }
+};
+
+function saveUncleState() {
+    localStorage.setItem('uncleDeals', uncleDeals);
+    localStorage.setItem('currentDealPrice', currentDealPrice);
+}
+
+function generateRandomPrice() {
+    currentDealPrice = Math.floor(Math.random() * 16) + 15;
+    return currentDealPrice;
+}
 
 function startChatWithUncle() {
-    if (!messages || !replyButtons) return;
-    
-    messages.innerHTML = '';
-    replyButtons.innerHTML = '';
-
-    addMessage("user", "Привет, Дядя Реджи!");
-    setTimeout(() => {
-        addMessage("bot", "Здарова, чем могу помочь?");
-        setReplyOptions([
-            { text: "Хочу продать пакеты с шишками", action: startSelling }
-        ]);
-    }, 1000);
-}
-
-// Продажа zip-пакетов с шишками
-function startSelling() {
-    if (!messages || !replyButtons) return;
-    
-    addMessage("user", "Хочу продать пакеты с шишками.");
-    replyButtons.innerHTML = '';
-
-    setTimeout(() => { 
-        addMessage("bot", "Сколько у тебя пакетов?");
-        setReplyOptions([
-            { text: "5 пакетов", action: () => offerPrice(5) },
-            { text: "10 пакетов", action: () => offerPrice(10) },
-            { text: "Продать всё", action: () => offerPrice('all') }
-        ]);
-    }, 1000);
-}
-
-function offerPrice(amount) {
-    if (!messages || !replyButtons) return;
-    
-    const totalZips = inventory['zip_shishka']?.count || 0;
-    const packCount = amount === 'all' ? totalZips : Math.min(amount, totalZips);
-    
-    // Если запрошено конкретное количество, но его нет
-    if (amount !== 'all' && totalZips < amount) {
-        addMessage("user", `У меня ${amount} пакетов.`);
-        replyButtons.innerHTML = '';
-        
-        setTimeout(() => {
-            // Случайный выбор грубого ответа
-            const angryResponses = [
-                "Ты что, меня за лоха держишь? У тебя всего " + totalZips + " пакетов!",
-                "Эй, дружок, у тебя только " + totalZips + "! Не пудри мне мозги!",
-                totalZips + " - вот сколько у тебя на самом деле. Не ври мне!",
-                "Я тебе не дурак! Проверил - у тебя " + totalZips + " пакетов."
-            ];
-            const randomResponse = angryResponses[Math.floor(Math.random() * angryResponses.length)];
-            
-            addMessage("bot", randomResponse);
-            
-            // Предлагаем продать то, что есть
-            if (totalZips > 0) {
-                setTimeout(() => {
-                    addMessage("bot", `Ладно, предлагаю по-честному - продать ${totalZips} за ${totalZips * 15}$?`);
-                    setReplyOptions([
-                        { text: "Да", action: () => confirmDeal(totalZips, totalZips * 15) },
-                        { text: "Нет", action: cancelDeal }
-                    ]);
-                }, 1500);
-            } else {
-                setTimeout(() => {
-                    addMessage("bot", "Даже не знаю, зачем ты вообще ко мне пришел...");
-                }, 1500);
-            }
-        }, 1000);
+    if (uncleStoppedBuying) {
+        addMessage('uncle', "Я больше не покупаю товар. Осваивай даркнет!");
+        showDialogStep('uncle', 'darknet_offer');
         return;
     }
     
-    addMessage("user", `У меня ${packCount} пакетов.`);
-    replyButtons.innerHTML = '';
+    generateRandomPrice();
+    showDialogStep('uncle', 'start');
+}
 
-    if (packCount === 0) {
-        setTimeout(() => {
-            addMessage("bot", "У тебя нет пакетов для продажи!");
-            setTimeout(() => {
-                addMessage("bot", "Иди выращивай сначала, потом приходи!");
-            }, 1500);
-        }, 1000);
-        return;
+function showDialogStep(character, stepId, customStep = null) {
+    const step = customStep || dialogs[character][stepId];
+    if (!step) return;
+
+    addMessage(character, step.message);
+
+    if (step.replies) {
+        showReplies(step.replies);
     }
-
-    const pricePerPack = Math.floor(Math.random() * (30 - 15 + 1)) + 15;
-    const totalPrice = pricePerPack * packCount;
-
-    setTimeout(() => {
-        addMessage("bot", `Готов взять ${packCount} пакетов за ${totalPrice}$. Согласен?`);
-        setReplyOptions([
-            { text: "Да", action: () => confirmDeal(packCount, totalPrice) },
-            { text: "Нет", action: cancelDeal }
-        ]);
-    }, 1000);
 }
 
-function confirmDeal(count, totalPrice) {
-    if (!messages) return;
-    
-    addMessage("user", "Да, забирай!");
-    if (replyButtons) replyButtons.innerHTML = '';
-
-    if (inventory['zip_shishka']?.count >= count) {
-        inventory['zip_shishka'].count -= count;
-        if (inventory['zip_shishka'].count <= 0) {
-            delete inventory['zip_shishka'];
-        }
-        playerMoney += totalPrice;
-        saveInventory();
-        localStorage.setItem('playerMoney', playerMoney);
-        updateInventory();
-        updateMoneyDisplay();
-    }
-
-    setTimeout(() => addMessage("bot", "Отлично, бабки перевёл."), 1000);
-}
-
-// Вспомогательные функции
-function addMessage(sender, text) {
-    if (!messages) return;
-    
-    const msg = document.createElement('div');
-    msg.classList.add('message');
-    if (sender === "user") msg.classList.add('user');
-    msg.innerText = text;
-    messages.appendChild(msg);
-    messages.scrollTop = messages.scrollHeight;
-}
-
-function setReplyOptions(options) {
+function showReplies(replies) {
+    const replyButtons = document.querySelector('.reply-buttons');
     if (!replyButtons) return;
-    
+
     replyButtons.innerHTML = '';
-    options.forEach(opt => {
+
+    replies.forEach(reply => {
+        if (reply.condition && !reply.condition()) return;
+
         const btn = document.createElement('button');
-        btn.innerText = opt.text;
-        btn.addEventListener('click', opt.action);
+        btn.textContent = reply.text;
+        
+        btn.addEventListener('click', () => {
+            addMessage('user', reply.text);
+            replyButtons.innerHTML = '';
+            setTimeout(() => {
+                if (reply.next) {
+                    showDialogStep('uncle', reply.next);
+                } else if (reply.action) {
+                    reply.action();
+                }
+            }, 800);
+        });
+        
         replyButtons.appendChild(btn);
     });
 }
 
-function cancelDeal() {
-    if (!messages || !replyButtons) return;
+function sellProduct(amount, pricePerUnit) {
+    if (uncleDeals >= MAX_DEALS) {
+        addMessage('uncle', "Я уже рисковал достаточно. Ищи других покупателей!");
+        return;
+    }
     
-    addMessage("user", "Нет, передумал.");
-    replyButtons.innerHTML = '';
-    setTimeout(() => addMessage("bot", "Ну окей, обращайся."), 1000);
-}
+    if (!inventory['zip_shishka'] || inventory['zip_shishka'].count < amount) {
+        addMessage('uncle', "У тебя даже столько нет! Не смеши меня.");
+        return;
+    }
 
-function offerMixerMachine() {
-    if (playerMoney >= 2000) {
-        addMessage("user", "Я хочу купить машинку для смешивания");
-        setTimeout(() => {
-            addMessage("bot", "Отличный выбор! Держи свою новую игрушку.");
-            playerMoney -= 2000;
-            localStorage.setItem('playerMoney', playerMoney);
-            updateMoneyDisplay();
-            
-            // Добавляем машинку в инвентарь
-            inventory['mixer_machine'] = { 
-                count: 1, 
-                type: 'tool', 
-                name: 'Машинка для смешивания',
-                usable: true
-            };
-            saveInventory();
-            updateInventory();
-            
-            // Обновляем чат (убираем вариант покупки)
-            setTimeout(startChatWithSylvester, 1500);
-        }, 1000);
-    } else {
-        addMessage("user", "Я хочу купить машинку");
-        setTimeout(() => {
-            addMessage("bot", "Эй, у тебя даже бабла нет! Приходи когда будут деньги.");
-            setTimeout(startChatWithSylvester, 1500);
-        }, 1000);
+    const total = amount * pricePerUnit;
+    decreaseItem('zip_shishka', amount);
+    playerMoney += total;
+    uncleDeals++;
+    updateMoneyDisplay();
+    saveInventory();
+
+    addMessage('uncle', `Ладно, держи ${total}$. (${MAX_DEALS - uncleDeals} раз осталось)`);
+    
+    if (uncleDeals >= MAX_DEALS) {
+        addMessage('uncle', "Это был последний раз. Больше не пиши мне!");
     }
 }
-
-function showMixComponents() {
-    messages.innerHTML = '';
-    replyButtons.innerHTML = '';
+function completeDeal(amount) {
+    if (uncleStoppedBuying) return;
     
-    addMessage("bot", "У меня есть крутые штуки для миксования:");
+    const total = amount * currentDealPrice;
+    decreaseItem('zip_shishka', amount);
+    playerMoney += total;
+    uncleDeals++;
     
-    const components = [
-        { id: 'mix_herbs', name: "Травяная смесь", price: 500, effect: "Увеличивает урожайность" },
-        { id: 'mix_minerals', name: "Минеральный порошок", price: 700, effect: "Ускоряет рост" },
-        { id: 'mix_special', name: "Секретный ингредиент", price: 1500, effect: "Шанс получить редкие шишки" }
-    ];
+    // Сохраняем состояние
+    localStorage.setItem('uncleDeals', uncleDeals);
+    updateMoneyDisplay();
+    saveInventory();
+    
+    // Показываем уведомление о сделке
+    showNotification(
+        `Продано ${amount} упаковок по ${currentDealPrice}$ = ${total}$`,
+        false
+    );
+    
+    // Обновляем чат
+    addMessage('uncle', `Деньги перевел! Не забывай, я не смогу постоянно приносить тебе деньги, слишком много рисков!`);
+    
+    if (uncleDeals >= MAX_DEALS) {
+        uncleStoppedBuying = true;
+        localStorage.setItem('uncleStoppedBuying', 'true');
+        
+        setTimeout(() => {
+            showNotification(
+                'Дядя Реджи больше не покупает товар. Используйте даркнет!',
+                false
+            );
+            addMessage('uncle', "Всё, хватит! Больше не буду покупать.");
+            setTimeout(() => showDialogStep('uncle', 'darknet_offer'), 1500);
+        }, 2000);
+    }
+}
+function negotiateBetterPrice() {
+    const oldPrice = currentDealPrice;
+    const success = Math.random() > 0.5;
+    
+    if (success) {
+        currentDealPrice += 5;
+        addMessage('uncle', `Ладно, сегодня добрый - дам ${currentDealPrice}$!`);
+    } else {
+        currentDealPrice = Math.max(15, currentDealPrice - 3);
+        addMessage('uncle', `Нет, так уж и быть - ${currentDealPrice}$ и точка!`);
+    }
+    
+    document.querySelector('.reply-buttons').innerHTML = '';
+    saveUncleState();
     
     setTimeout(() => {
-        components.forEach(comp => {
-            const btn = document.createElement('button');
-            btn.className = 'action-button';
-            btn.innerHTML = `${comp.name} - ${comp.price}$<br><small>${comp.effect}</small>`;
-            btn.addEventListener('click', () => buyMixComponent(comp));
-            replyButtons.appendChild(btn);
-        });
-        
-        const backBtn = document.createElement('button');
-        backBtn.className = 'action-button';
-        backBtn.textContent = "Назад";
-        backBtn.addEventListener('click', startChatWithSylvester);
-        replyButtons.appendChild(backBtn);
+        const tempStep = {
+            message: `Итак, по ${currentDealPrice}$ за упаковку. Сколько скинешь?`,
+            replies: dialogs.uncle.selling_options.replies
+        };
+        showDialogStep('uncle', 'selling_options', tempStep);
     }, 1000);
 }
 
-function buyMixComponent(component) {
-    if (playerMoney >= component.price) {
-        playerMoney -= component.price;
-        localStorage.setItem('playerMoney', playerMoney);
-        updateMoneyDisplay();
-        
-        if (!inventory[component.id]) {
-            inventory[component.id] = { 
-                count: 0, 
-                type: 'mix_component', 
-                name: component.name 
-            };
-        }
-        inventory[component.id].count += 1;
-        saveInventory();
-        updateInventory();
-        
-        showNotification(`Куплено: ${component.name}`);
-        setTimeout(startChatWithSylvester, 1500);
-    } else {
-        showNotification("Недостаточно денег!", true);
+function updateDarknetPrices() {
+    // Каждые 5 продаж увеличиваем сложность
+    if (darknetReputation >= 5 && darknetReputation < 10) {
+        // Увеличиваем риски но и цены
+        dialogs.uncle.darknet_explain.message = 
+            "Ты привлекаешь внимание! Риски выше, но и цены растут.";
+    } else if (darknetReputation >= 10) {
+        // Открываем новые товары
+        dialogs.uncle.darknet_explain.message = 
+            "Теперь ты серьезный игрок. Доступны эксклюзивные товары!";
     }
 }
 
+
+function addMessage(sender, text) {
+    const messages = document.querySelector('.messages');
+    if (!messages) return;
+    
+    const msg = document.createElement('div');
+    msg.className = `message ${sender === 'user' ? 'user' : 'npc'}`;
+    msg.innerHTML = `
+        <div class="message-text">${text}</div>
+    `;
+    messages.appendChild(msg);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+const priceHistory = [];
+
+function getCurrentPrice() {
+    const base = 120;
+    const fluctuation = Math.floor(Math.random() * 20 - 10); // ±10
+    const currentPrice = base + fluctuation + (darknetReputation * 10);
+    priceHistory.push(currentPrice);
+    if (priceHistory.length > 10) priceHistory.shift(); // ограничим длину
+    return currentPrice;
+}
+
+function generateDemand() {
+    return Math.floor(Math.random() * 100);
+}
+
+function renderPriceChart() {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    if (window.priceChartInstance) {
+        window.priceChartInstance.destroy();
+    }
+
+    window.priceChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: priceHistory.map((_, i) => `Тик ${i + 1}`),
+            datasets: [{
+                label: 'Цена на шишки ($)',
+                data: priceHistory,
+                borderColor: 'limegreen',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.2
+            }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: false }
+            }
+        }
+    });
+}
+
+// let sellQuantity = 1;
+// const maxQty = inventory['zip_shishka']?.count || 0;
+
+// const qtyInput = document.getElementById('sell-quantity');
+// document.getElementById('decrease-qty').addEventListener('click', () => {
+//     if (sellQuantity > 1) {
+//         sellQuantity--;
+//         qtyInput.value = sellQuantity;
+//     }
+// });
+
+// document.getElementById('increase-qty').addEventListener('click', () => {
+//     if (sellQuantity < maxQty) {
+//         sellQuantity++;
+//         qtyInput.value = sellQuantity;
+//     }
+// });
+
+
+function initDarknetApp() {
+    const appContent = document.querySelector('.app-content');
+    appContent.innerHTML = `
+        <div class="darknet-app">
+            <div class="darknet-header">
+                <h2>🕶️ DARKNET MARKET v3.2</h2>
+                <p>Репутация: ${darknetReputation}/10</p>
+                <div class="darknet-rep">Ваш статус: ${getReputationTitle()}</div>
+            </div>
+            
+            <canvas id="priceChart" width="300" height="150"></canvas>
+
+            <div class="market-item">
+                <img src="${getDarkItemImage('zip_shishka')}" alt="Пакет шишек" style="height: 60px;">
+                <div class="item-name">Пакет шишек</div>
+                <div class="item-price">Текущая цена: ${getCurrentPrice()}$</div>
+                <div class="item-demand">Спрос: ${generateDemand()}%</div>
+                <div class="item-inventory">У вас: ${inventory['zip_shishka']?.count || 0} шт.</div>
+                <div class="quantity-selector">
+                    <button id="decrease-qty">-</button>
+                    <input type="text" id="sell-quantity" value="1" readonly />
+                    <button id="increase-qty">+</button>
+                </div>
+                <button class="darknet-button" id="sell-shishka">Продать</button>
+            </div>
+        </div>
+    `;
+
+    // После того как весь контент добавлен, инициализируем события
+    let sellQuantity = 1;
+    const maxQty = inventory['zip_shishka']?.count || 0;
+
+    const qtyInput = document.getElementById('sell-quantity');
+    document.getElementById('decrease-qty').addEventListener('click', () => {
+        if (sellQuantity > 1) {
+            sellQuantity--;
+            qtyInput.value = sellQuantity;
+        }
+    });
+
+    document.getElementById('increase-qty').addEventListener('click', () => {
+        if (sellQuantity < maxQty) {
+            sellQuantity++;
+            qtyInput.value = sellQuantity;
+        }
+    });
+
+    document.getElementById('sell-shishka').addEventListener('click', () => {
+        const qty = sellQuantity;
+        if (qty > 0) {
+            sellOnDarknet('zip_shishka', qty);
+        }
+    });
+
+    renderPriceChart();
+}
+
+
+function renderDarknetMarket() {
+    const market = document.getElementById('darknet-market');
+    if (!market) return;
+    
+    market.innerHTML = '';
+    
+    // Пример товаров в даркнете
+    const darknetItems = [
+        { id: 'shishka_pack', name: "Пакет шишек", price: 150, risk: 30 },
+        { id: 'fertilizer_pro', name: "Профессиональное удобрение", price: 800, risk: 15 },
+        { id: 'booster_xtreme', name: "Экстремальный бустер", price: 1200, risk: 40 }
+    ];
+    
+    darknetItems.forEach(item => {
+        const itemElement = document.createElement('div');
+        itemElement.className = 'market-item';
+        itemElement.innerHTML = `
+            <div class="item-name">${item.name}</div>
+            <div class="item-price">${item.price}$ (Риск: ${item.risk}%)</div>
+            <button class="darknet-button buy-item">Купить</button>
+        `;
+        
+        itemElement.querySelector('.buy-item').addEventListener('click', () => {
+            attemptDarknetPurchase(item);
+        });
+        
+        market.appendChild(itemElement);
+    });
+}
+
+function attemptDarknetPurchase(item) {
+    if (playerMoney < item.price) {
+        showNotification('Недостаточно денег!', true);
+        return;
+    }
+    
+    const success = Math.random() * 100 > item.risk;
+    
+    if (success) {
+        playerMoney -= item.price;
+        // Добавить предмет в инвентарь
+        if (!inventory[item.id]) {
+            inventory[item.id] = { count: 0, type: 'darknet_item', name: item.name };
+        }
+        inventory[item.id].count += 1;
+        
+        // Увеличить репутацию
+        darknetReputation = Math.min(10, darknetReputation + 1);
+        localStorage.setItem('darknetReputation', darknetReputation);
+        
+        showNotification(`Успешная покупка! ${item.name} добавлен в инвентарь.`);
+        updateMoneyDisplay();
+        updateInventory();
+        renderDarknetMarket(); // Обновить список товаров
+    } else {
+        playerMoney -= item.price;
+        showNotification('Провал! Товар конфискован, деньги потеряны.', true);
+        updateMoneyDisplay();
+    }
+}
+
+function calculateDarknetPrice(itemId) {
+    // Базовая цена + бонус за репутацию
+    const basePrice = {
+        'zip_shishka': 120,
+        'shishka_herb': 180
+    }[itemId] || 100;
+    
+    return basePrice + (darknetReputation * 10);
+}
+
+function sellOnDarknet(itemId, quantity) {
+    if (!inventory[itemId] || inventory[itemId].count < quantity) {
+        showNotification('Недостаточно товара!', true);
+        return;
+    }
+    
+    const price = calculateDarknetPrice(itemId) * quantity;
+    const risk = Math.max(5, 30 - (darknetReputation * 2));
+    
+    if (Math.random() * 100 < risk) {
+        // Неудача - товар конфискован
+        decreaseItem(itemId, quantity);
+        showNotification(`Провал! Товар конфискован полицией. (Риск: ${risk}%)`, true);
+    } else {
+        // Успех
+        decreaseItem(itemId, quantity);
+        playerMoney += price;
+        darknetReputation = Math.min(10, darknetReputation + 0.5);
+        
+        localStorage.setItem('darknetReputation', darknetReputation);
+        localStorage.setItem('playerMoney', playerMoney);
+        
+        showNotification(`Успешно продано! +${price}$ (Риск: ${risk}%)`);
+        updateMoneyDisplay();
+        initDarknetApp();
+    }
+}
+
+function getPriceHistory(itemId) {
+    const key = `priceHistory_${itemId}`;
+    const stored = localStorage.getItem(key);
+    let history = stored ? JSON.parse(stored) : [];
+
+    const newPrice = calculateDarknetPrice(itemId);
+    if (history.length >= 10) history.shift();
+    history.push(newPrice);
+
+    localStorage.setItem(key, JSON.stringify(history));
+    return history;
+}
+
+function drawPriceChart(data) {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map((_, i) => `День ${i + 1}`),
+            datasets: [{
+                label: 'Цена за пакет',
+                data,
+                fill: false,
+                borderColor: '#00ff99',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: { callback: value => `${value}$` }
+                }
+            }
+        }
+    });
+}
+
+function getPriceHistory(itemId) {
+    const key = `priceHistory_${itemId}`;
+    const stored = localStorage.getItem(key);
+    let history = stored ? JSON.parse(stored) : [];
+
+    const newPrice = calculateDarknetPrice(itemId);
+    if (history.length >= 10) history.shift();
+    history.push(newPrice);
+
+    localStorage.setItem(key, JSON.stringify(history));
+    return history;
+}
+
+function drawPriceChart(data) {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map((_, i) => `День ${i + 1}`),
+            datasets: [{
+                label: 'Цена за пакет',
+                data,
+                fill: false,
+                borderColor: '#00ff99',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: { callback: value => `${value}$` }
+                }
+            }
+        }
+    });
+}
+
+//________________________________________________________________________________Мессенджер (Darknet)
+
+//____________________________________________________________________LOAD
 document.addEventListener('DOMContentLoaded', () => {
     if (isTelegram) {
-        // Отключаем масштабирование
         tg.enableClosingConfirmation();
         tg.setHeaderColor('#4CAF50');
         tg.setBackgroundColor('#111');
         
-        // Для отладки
         console.log('Telegram WebApp initialized');
         console.log('User:', tg.initDataUnsafe?.user);
     }
 });
 
-// Загрузка
 window.addEventListener('load', () => {
     const loader = document.getElementById('loading-screen');
     if (loader) {
         setTimeout(() => {
             loader.classList.add('loaded');
-            setTimeout(() => loader.remove(), 500);
+            setTimeout(() => {
+                loader.remove();
+                // Показываем подсказку о даркнете при первом запуске
+                if (!localStorage.getItem('darknetTutorialShown')) {
+                    showNotification("Даркнет доступен в телефоне. Рискованно, но прибыльно!");
+                    localStorage.setItem('darknetTutorialShown', 'true');
+                }
+            }, 500);
         }, 5000);
     }
+    delete inventory['mixer_machine'];
+    delete inventory['light'];
 });
+//____________________________________________________________________LOAD
+
+//__________________________________________________MAP________________________________________________________
+
+
+//__________________________________________________MAP________________________________________________________
