@@ -1624,15 +1624,23 @@ let walletAddress = '';
 document.addEventListener('DOMContentLoaded', () => {
     initWallet();
     
-    // Проверяем доступность Phantom
+    // Автопроверка подключенного кошелька
     if (window.solana) {
-        console.log('Phantom Wallet доступен');
-        window.solana.on('connect', () => {
-            console.log('Кошелек подключен!');
-            handleWalletConnection(window.solana.publicKey.toString());
-        });
+        checkWalletConnection();
     }
 });
+
+async function checkWalletConnection() {
+    try {
+        // Проверяем, есть ли уже подключение
+        if (window.solana.isConnected) {
+            const publicKey = await window.solana.connect();
+            handleWalletConnection(publicKey.toString());
+        }
+    } catch (error) {
+        console.log('Кошелек не подключен:', error);
+    }
+}
 
 function initWallet() {
     const walletModal = document.getElementById('wallet-modal');
@@ -1672,7 +1680,7 @@ function initWallet() {
         try {
             showLoading(true);
             
-            // Для Telegram WebView показываем инструкцию
+            // Для Telegram WebView
             if (isTelegramWebView()) {
                 showNotification('Для подключения кошелька откройте игру в браузере', true);
                 showLoading(false);
@@ -1681,26 +1689,15 @@ function initWallet() {
             
             // Для мобильных устройств
             if (isMobile()) {
-                // Просто открываем Phantom без callback
-                window.location.href = "https://phantom.app/ul/v1/connect";
-                showNotification("Подтвердите подключение в Phantom, затем вернитесь в игру", false);
+                await connectMobileWallet();
                 return;
             }
             
             // Для десктопной версии
             if (window.solana?.isPhantom) {
-                const response = await window.solana.connect();
-                if (response.publicKey) {
-                    handleWalletConnection(response.publicKey.toString());
-                } else {
-                    throw new Error('Не удалось получить публичный ключ');
-                }
+                await connectDesktopWallet();
             } else {
-                const shouldInstall = confirm('Phantom Wallet не обнаружен. Хотите установить его?');
-                if (shouldInstall) {
-                    window.open('https://phantom.app/download', '_blank');
-                }
-                showNotification('Для подключения требуется Phantom Wallet', true);
+                offerPhantomInstall();
             }
         } catch (error) {
             console.error('Wallet connection error:', error);
@@ -1708,6 +1705,49 @@ function initWallet() {
         } finally {
             showLoading(false);
         }
+    }
+
+    async function connectMobileWallet() {
+        // Создаем уникальный идентификатор сессии
+        const sessionId = 'session_' + Date.now();
+        localStorage.setItem('phantom_session', sessionId);
+        
+        // Параметры для запроса на подключение
+        const connectParams = {
+            app_url: window.location.origin,
+            redirect_link: window.location.href,
+            session_id: sessionId
+        };
+        
+        // Открываем Phantom с запросом на подключение
+        const phantomDeepLink = `https://phantom.app/ul/v1/connect?${new URLSearchParams(connectParams)}`;
+        window.location.href = phantomDeepLink;
+        
+        showNotification("Подтвердите подключение в Phantom", false);
+    }
+
+    async function connectDesktopWallet() {
+        try {
+            // Создаем запрос на подключение
+            const response = await window.solana.connect({ onlyIfTrusted: false });
+            
+            if (response.publicKey) {
+                handleWalletConnection(response.publicKey.toString());
+            } else {
+                throw new Error('Не удалось получить публичный ключ');
+            }
+        } catch (error) {
+            console.error('Ошибка подключения:', error);
+            throw error;
+        }
+    }
+
+    function offerPhantomInstall() {
+        const shouldInstall = confirm('Phantom Wallet не обнаружен. Хотите установить его?');
+        if (shouldInstall) {
+            window.open('https://phantom.app/download', '_blank');
+        }
+        showNotification('Для подключения требуется Phantom Wallet', true);
     }
 
     function handleWalletConnection(address) {
@@ -1728,7 +1768,6 @@ function initWallet() {
     }
 
     function disconnectWallet() {
-        // Отключаем кошелек через API Phantom, если доступно
         if (window.solana?.disconnect) {
             window.solana.disconnect();
         }
