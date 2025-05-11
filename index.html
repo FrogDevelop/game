@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@solana/web3.js@1.43.0/dist/solanaWeb3.min.js"></script>
     <link href="icon.png" rel="icon">
+    <title>medium Farm</title>
     <script>
         window.addEventListener("DOMContentLoaded", () => {
         const tg = window.Telegram?.WebApp;
@@ -87,37 +90,91 @@
     <div id="action-menu" class="action-menu hidden"></div>
 
     <!-- Окно телефона -->
-<!-- Окно телефона -->
-<div id="phone-modal" class="phone-modal">
-    <div class="phone-frame">
-        <div class="phone-header"></div>
-        <div class="phone-screen">
-            <!-- Главный экран -->
-            <div class="home-screen">
-                <div class="phone-apps">
-                    <div class="phone-app" data-app="chats" style="background-color: rgb(47, 203, 0);">
-                        <img src="chat.png" alt="Чаты">
+    <div id="phone-modal" class="phone-modal">
+        <div class="phone-frame">
+            <div class="phone-header"></div>
+            <div class="phone-screen">
+                <!-- Главный экран -->
+                <div class="home-screen">
+                    <div class="phone-apps">
+                        <div class="phone-app" data-app="chats" style="background-color: rgb(47, 203, 0);">
+                            <img src="chat.png" alt="Чаты">
+                        </div>
+                        
                     </div>
-                    
+                </div>
+                
+                <!-- Экран приложения (изначально скрыт) -->
+                <div class="app-screen" style="display: none;">
+                    <div class="app-header">
+                        <button class="back-button">← Назад</button>
+                        <h2 class="app-title"></h2>
+                    </div>
+                    <div class="app-content"></div>
                 </div>
             </div>
             
-            <!-- Экран приложения (изначально скрыт) -->
-            <div class="app-screen" style="display: none;">
-                <div class="app-header">
-                    <button class="back-button">← Назад</button>
-                    <h2 class="app-title"></h2>
-                </div>
-                <div class="app-content"></div>
+            <div class="phone-footer">
+                <div id="close-phone" class="close-phone-button"></div>
             </div>
         </div>
-        
-        <div class="phone-footer">
-            <div id="close-phone" class="close-phone-button"></div>
-        </div>
     </div>
-</div>
 
+<div id="wallet-modal" style="display: none;">
+  <div class="wallet-content">
+    <button class="close-wallet-button" id="close-wallet-modal" style="top: 80px;">&times;</button>
+    
+    <div class="wallet-header">
+      <img src="big-wallet.png" alt="Wallet" class="wallet-icon">
+      <h2>Кошелек</h2>
+    </div>
+    
+    <div id="wallet-interface">
+      <div class="wallet-description">
+        <p>Подключите свой криптокошелек для получения токенов</p>
+      </div>
+      
+      <div class="wallet-options">
+        <button id="connect-wallet-phantom" class="wallet-option">
+          <img src="phantom.png" alt="Phantom">
+          <span>Phantom</span>
+        </button>
+        
+        <button id="connect-wallet-solflare" class="wallet-option" disabled>
+          <img src="solflare.png" alt="Solflare">
+          <span>Solflare (скоро)</span>
+        </button>
+
+        <button id="connect-wallet-trust" class="wallet-option" disabled>
+          <img src="trust.png" alt="trust">
+          <span>Trust (скоро)</span>
+        </button>
+      </div>
+    </div>
+    
+    <div id="wallet-details" style="display: none;">
+      <div class="wallet-info">
+        <div class="info-item">
+          <span>Статус:</span>
+          <span class="status-connected">Подключено</span>
+        </div>
+        <div class="info-item">
+          <span>Адрес:</span>
+          <span id="wallet-address-display" class="wallet-address"></span>
+        </div>
+        <div class="info-item">
+          <span>Баланс:</span>
+          <span id="wallet-balance">0 SOL</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="wallet-footer">
+      <button id="disconnect-wallet" class="btn-disconnect">Отключить кошелек</button>
+      <p>Мы используем только проверенные кошельки</p>
+    </div>
+  </div>
+</div>
 
     <div id="buff-status-container" class="buff-status-container"></div>
     

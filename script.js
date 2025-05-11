@@ -107,48 +107,27 @@ function showNotification(text, isError = false) {
     if (!notificationContainer) {
         notificationContainer = document.createElement('div');
         notificationContainer.id = 'notification-container';
-        notificationContainer.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        `;
         document.body.appendChild(notificationContainer);
     }
 
     const notification = document.createElement('div');
     notification.className = `notification ${isError ? 'error' : ''}`;
     notification.textContent = text;
-    notification.style.cssText = `
-        padding: 10px 20px;
-        background: ${isError ? '#ff4444' : '#4CAF50'};
-        color: white;
-        border-radius: 4px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        opacity: 0;
-        transform: translateY(-20px);
-        transition: all 0.3s ease;
-    `;
     
     notificationContainer.appendChild(notification);
     
+    // Анимация появления
     setTimeout(() => {
         notification.style.opacity = '1';
-        notification.style.transform = 'translateY(0)';
+        notification.style.animation = 'slideInFromLeft 0.3s ease-out forwards';
     }, 10);
     
+    // Автоматическое скрытие через 3 секунды
     setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateY(-20px)';
+        notification.style.animation = 'fadeOutToLeft 0.3s ease-in forwards';
         setTimeout(() => notification.remove(), 300);
-    }, 3000);
+    }, 1000);
 }
-
 function activateBuff(buffId) {
     if (Object.keys(activeBuffs).length >= 1) {
         showNotification('Можно активировать только один бафф за раз!', true);
@@ -1234,7 +1213,7 @@ function addMessage(sender, text) {
 const priceHistory = [];
 
 function getCurrentPrice() {
-    const base = 120;
+    const base = 50;
     const fluctuation = Math.floor(Math.random() * 20 - 10); // ±10
     const currentPrice = base + fluctuation + (darknetReputation * 10);
     priceHistory.push(currentPrice);
@@ -1243,16 +1222,29 @@ function getCurrentPrice() {
 }
 
 function generateDemand() {
-    return Math.floor(Math.random() * 100);
+    // Базовый спрос + случайные колебания + влияние репутации
+    const baseDemand = 50;
+    const randomFactor = Math.floor(Math.random() * 30);
+    const reputationEffect = darknetReputation * 3;
+    
+    // Округление до десятых
+    return Math.round(Math.min(100, baseDemand + randomFactor + reputationEffect) * 10) / 10;
 }
 
+let priceChartInstance = null; // Глобальная переменная для хранения экземпляра графика
+
 function renderPriceChart() {
-    const ctx = document.getElementById('priceChart').getContext('2d');
-    if (window.priceChartInstance) {
-        window.priceChartInstance.destroy();
+    const ctx = document.getElementById('priceChart');
+    if (!ctx) return;
+
+    // Уничтожаем предыдущий график, если он существует
+    if (priceChartInstance) {
+        priceChartInstance.destroy();
+        priceChartInstance = null;
     }
 
-    window.priceChartInstance = new Chart(ctx, {
+    // Создаем новый график
+    priceChartInstance = new Chart(ctx.getContext('2d'), {
         type: 'line',
         data: {
             labels: priceHistory.map((_, i) => `Тик ${i + 1}`),
@@ -1266,49 +1258,52 @@ function renderPriceChart() {
             }]
         },
         options: {
+            responsive: true,
+            maintainAspectRatio: false,
             scales: {
-                y: { beginAtZero: false }
+                y: { 
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '$';
+                        }
+                    }
+                }
             }
         }
     });
 }
 
-// let sellQuantity = 1;
-// const maxQty = inventory['zip_shishka']?.count || 0;
-
-// const qtyInput = document.getElementById('sell-quantity');
-// document.getElementById('decrease-qty').addEventListener('click', () => {
-//     if (sellQuantity > 1) {
-//         sellQuantity--;
-//         qtyInput.value = sellQuantity;
-//     }
-// });
-
-// document.getElementById('increase-qty').addEventListener('click', () => {
-//     if (sellQuantity < maxQty) {
-//         sellQuantity++;
-//         qtyInput.value = sellQuantity;
-//     }
-// });
-
-
 function initDarknetApp() {
+    const currentPrice = calculateDarknetPrice('zip_shishka');
+    const demand = Math.round(generateDemand() * 10) / 10;
+    const risk = Math.round(Math.max(5, 30 - (darknetReputation * 2)) * 10) / 10;
+    const reputation = Math.round(darknetReputation * 10) / 10;
+    
+    // Обновляем историю цен (уже округленную)
+    priceHistory.push(currentPrice);
+    if (priceHistory.length > 10) priceHistory.shift();
+    
     const appContent = document.querySelector('.app-content');
     appContent.innerHTML = `
         <div class="darknet-app">
             <div class="darknet-header">
                 <h2>🕶️ DARKNET MARKET v3.2</h2>
-                <p>Репутация: ${darknetReputation}/10</p>
-                <div class="darknet-rep">Ваш статус: ${getReputationTitle()}</div>
+                <p>Репутация: ${reputation}/20</p>
+                <div class="darknet-rep">${getReputationTitle(darknetReputation)}</div>
+                <div class="tor-status">${getRandomTorStatus()}</div>
             </div>
             
-            <canvas id="priceChart" width="300" height="150"></canvas>
+            <div class="chart-container" style="height: 200px; position: relative;">
+                <canvas id="priceChart"></canvas>
+            </div>
 
             <div class="market-item">
                 <img src="${getDarkItemImage('zip_shishka')}" alt="Пакет шишек" style="height: 60px;">
                 <div class="item-name">Пакет шишек</div>
-                <div class="item-price">Текущая цена: ${getCurrentPrice()}$</div>
-                <div class="item-demand">Спрос: ${generateDemand()}%</div>
+                <div class="item-price">Цена: ${currentPrice}$ (${getPriceTrend()}) [15-30$]</div>
+                <div class="item-demand">Спрос: ${demand}%</div>
+                <div class="item-risk">Риск: ${risk}%</div>
                 <div class="item-inventory">У вас: ${inventory['zip_shishka']?.count || 0} шт.</div>
                 <div class="quantity-selector">
                     <button id="decrease-qty">-</button>
@@ -1320,7 +1315,12 @@ function initDarknetApp() {
         </div>
     `;
 
-    // После того как весь контент добавлен, инициализируем события
+    // Инициализация графика после небольшой задержки
+    setTimeout(() => {
+        renderPriceChart();
+    }, 50);
+
+    // Обработчики событий
     let sellQuantity = 1;
     const maxQty = inventory['zip_shishka']?.count || 0;
 
@@ -1345,8 +1345,20 @@ function initDarknetApp() {
             sellOnDarknet('zip_shishka', qty);
         }
     });
+}
 
-    renderPriceChart();
+// Функция для обновления графика без пересоздания
+function updatePriceChart(newPrice) {
+    if (!priceChartInstance) return;
+    
+    // Добавляем новую цену в историю
+    priceHistory.push(newPrice);
+    if (priceHistory.length > 10) priceHistory.shift();
+    
+    // Обновляем данные графика
+    priceChartInstance.data.labels = priceHistory.map((_, i) => `Тик ${i + 1}`);
+    priceChartInstance.data.datasets[0].data = priceHistory;
+    priceChartInstance.update();
 }
 
 
@@ -1358,9 +1370,7 @@ function renderDarknetMarket() {
     
     // Пример товаров в даркнете
     const darknetItems = [
-        { id: 'shishka_pack', name: "Пакет шишек", price: 150, risk: 30 },
-        { id: 'fertilizer_pro', name: "Профессиональное удобрение", price: 800, risk: 15 },
-        { id: 'booster_xtreme', name: "Экстремальный бустер", price: 1200, risk: 40 }
+        { id: 'shishka_pack', name: "Пакет шишек", price: 50, risk: 30 },
     ];
     
     darknetItems.forEach(item => {
@@ -1412,13 +1422,42 @@ function attemptDarknetPurchase(item) {
 }
 
 function calculateDarknetPrice(itemId) {
-    // Базовая цена + бонус за репутацию
-    const basePrice = {
-        'zip_shishka': 120,
-        'shishka_herb': 180
-    }[itemId] || 100;
+    // Базовые цены для разных товаров
+    const basePrices = {
+        'zip_shishka': 20, // Средняя базовая цена
+    };
     
-    return basePrice + (darknetReputation * 10);
+    if (!basePrices[itemId]) return 20;
+    
+    // Факторы влияния на цену:
+    const reputationBonus = darknetReputation * 2; // +2$ за каждый уровень репутации
+    const randomFluctuation = Math.floor(Math.random() * 11) - 5; // ±5$
+    const demandFactor = generateDemand() / 20; // 0-5$ в зависимости от спроса
+    
+    // Итоговая цена с ограничениями 15-30$ и округлением до десятых
+    const price = basePrices[itemId] + reputationBonus + randomFluctuation + demandFactor;
+    return Math.round(Math.max(15, Math.min(30, price)) * 10) / 10;
+}
+
+function getPriceTrend() {
+    if (priceHistory.length < 2) return "↔";
+    const last = priceHistory[priceHistory.length - 1];
+    const prev = priceHistory[priceHistory.length - 2];
+    
+    if (last > prev) return "↑";
+    if (last < prev) return "↓";
+    return "↔";
+}
+
+function getRandomTorStatus() {
+    const statuses = [
+        "TOR: Secure Connection",
+        "TOR: Relay Active",
+        "TOR: 3 Hops",
+        "TOR: Anonymous",
+        "TOR: Bridge Connected"
+    ];
+    return statuses[Math.floor(Math.random() * statuses.length)];
 }
 
 function sellOnDarknet(itemId, quantity) {
@@ -1427,25 +1466,34 @@ function sellOnDarknet(itemId, quantity) {
         return;
     }
     
-    const price = calculateDarknetPrice(itemId) * quantity;
-    const risk = Math.max(5, 30 - (darknetReputation * 2));
+    const basePrice = Math.round(calculateDarknetPrice(itemId) * 10) / 10;
+    // Чем больше продаем за раз - тем выше риск
+    const quantityRisk = Math.min(20, quantity * 2);
+    // Базовый риск минус бонус за репутацию (округляем до десятых)
+    const risk = Math.round(Math.max(5, 30 - (darknetReputation * 2) + quantityRisk) * 10) / 10;
+    
+    const totalPrice = Math.round(basePrice * quantity * 10) / 10;
     
     if (Math.random() * 100 < risk) {
         // Неудача - товар конфискован
         decreaseItem(itemId, quantity);
         showNotification(`Провал! Товар конфискован полицией. (Риск: ${risk}%)`, true);
+        
+        // При провале теряем немного репутации (округляем)
+        darknetReputation = Math.round(Math.max(0, darknetReputation - 0.3) * 10) / 10;
+        localStorage.setItem('darknetReputation', darknetReputation);
     } else {
         // Успех
         decreaseItem(itemId, quantity);
-        playerMoney += price;
-        darknetReputation = Math.min(10, darknetReputation + 0.5);
+        playerMoney += totalPrice;
+        darknetReputation = Math.round(Math.min(20, darknetReputation + (quantity * 0.2)) * 10) / 10;
         
         localStorage.setItem('darknetReputation', darknetReputation);
         localStorage.setItem('playerMoney', playerMoney);
         
-        showNotification(`Успешно продано! +${price}$ (Риск: ${risk}%)`);
+        showNotification(`Успешно продано ${quantity} шт. за ${totalPrice}$ (Риск: ${risk}%)`);
         updateMoneyDisplay();
-        initDarknetApp();
+        initDarknetApp(); // Обновляем интерфейс
     }
 }
 
@@ -1567,7 +1615,117 @@ window.addEventListener('load', () => {
 });
 //____________________________________________________________________LOAD
 
-//__________________________________________________MAP________________________________________________________
+//__________________________________________________WALLET________________________________________________________
+document.addEventListener('DOMContentLoaded', () => {
+    const walletModal = document.getElementById('wallet-modal');
+    const closeWalletButton = document.getElementById('close-wallet-modal');
+    const connectPhantomBtn = document.getElementById('connect-wallet-phantom');
+    document.getElementById('disconnect-wallet').addEventListener('click', disconnectWallet);
+    const walletDetails = document.getElementById('wallet-details');
+    const walletInterface = document.getElementById('wallet-interface');
+    const walletAddressDisplay = document.getElementById('wallet-address-display');
+    const loadingSpinner = document.createElement('div');
+    loadingSpinner.className = 'loading-spinner';
+    const savedAddress = localStorage.getItem('walletAddress');
+    if (savedAddress) {
+        walletAddressDisplay.textContent = `${savedAddress.substring(0, 4)}...${savedAddress.substring(savedAddress.length - 4)}`;
+        walletInterface.style.display = 'none';
+        walletDetails.style.display = 'flex';
+    }
 
+    // Открытие модалки при нажатии на кнопку кошелька
+    const walletButton = document.getElementById('wallet_button');
+    walletButton.addEventListener('click', () => {
+        walletModal.style.display = 'flex';
+    });
 
-//__________________________________________________MAP________________________________________________________
+    // Закрытие модалки при нажатии на крестик
+    closeWalletButton.addEventListener('click', () => {
+        walletModal.style.display = 'none';
+    });
+
+    // Подключение Phantom
+    connectPhantomBtn.addEventListener('click', async () => {
+        walletInterface.appendChild(loadingSpinner); // Показываем индикатор загрузки
+        try {
+            if (window.solana && window.solana.isPhantom) {
+                const response = await window.solana.connect();
+                const address = response.publicKey.toString();
+
+                walletAddressDisplay.textContent = address;
+                walletInterface.style.display = 'none';
+                walletDetails.style.display = 'block';
+
+                localStorage.setItem('walletAddress', address);
+
+                // Для Telegram WebApp
+                const tg = window.Telegram?.WebApp;
+                if (tg) {
+                    tg.sendData(JSON.stringify({ wallet: address }));
+                }
+            }
+        } catch (err) {
+            alert('Ошибка подключения: ' + (err.message || 'Неизвестная ошибка'));
+        } finally {
+            loadingSpinner.remove(); // Скрываем индикатор загрузки
+        }
+    });
+});
+
+async function connectWallet() {
+  const loadingSpinner = document.createElement('div');
+  loadingSpinner.className = 'loading-spinner';
+  walletInterface.appendChild(loadingSpinner);
+  
+  try {
+    if (window.solana && window.solana.isPhantom) {
+      const response = await window.solana.connect();
+      const address = response.publicKey.toString();
+      
+    document.getElementById('disconnect-wallet').style.display = 'block';
+
+      // Форматируем адрес для отображения
+      const formattedAddress = `${address.substring(0, 4)}...${address.substring(address.length - 4)}`;
+      
+      walletAddressDisplay.textContent = formattedAddress;
+      walletAddressDisplay.setAttribute('title', address); // Полный адрес в tooltip
+      
+      walletInterface.style.display = 'none';
+      walletDetails.style.display = 'flex';
+      
+      // Получаем баланс (упрощенный пример)
+      const balance = await getWalletBalance(address);
+      document.getElementById('wallet-balance').textContent = `${balance} SOL`;
+      
+      // Сохраняем в localStorage
+      localStorage.setItem('walletAddress', address);
+      
+      // Для Telegram WebApp
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        tg.sendData(JSON.stringify({ 
+          wallet: address,
+          balance: balance
+        }));
+      }
+    }
+  } catch (err) {
+    showNotification('Ошибка подключения: ' + (err.message || 'Неизвестная ошибка'), true);
+  } finally {
+    loadingSpinner.remove();
+  }
+}
+
+function disconnectWallet() {
+    const walletInterface = document.getElementById('wallet-interface');
+    const walletDetails = document.getElementById('wallet-details');
+    document.getElementById('disconnect-wallet').style.display = 'none';
+    if (walletInterface && walletDetails) {
+        walletInterface.style.display = 'block';
+        walletDetails.style.display = 'none';
+        localStorage.removeItem('walletAddress');
+        showNotification('Кошелек отключен');
+    }
+}
+
+//__________________________________________________WALLET________________________________________________________
