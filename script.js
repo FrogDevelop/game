@@ -1623,9 +1623,8 @@ let walletAddress = '';
 // Инициализация кошелька при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
     initWallet();
-    checkUrlForWalletConnection();
     
-    // Добавляем проверку доступности Phantom
+    // Проверяем доступность Phantom
     if (window.solana) {
         console.log('Phantom Wallet доступен');
         window.solana.on('connect', () => {
@@ -1673,53 +1672,28 @@ function initWallet() {
         try {
             showLoading(true);
             
-            // Проверяем, если мы в Telegram WebView
+            // Для Telegram WebView показываем инструкцию
             if (isTelegramWebView()) {
                 showNotification('Для подключения кошелька откройте игру в браузере', true);
                 showLoading(false);
                 return;
             }
             
-            // Проверяем мобильное устройство
+            // Для мобильных устройств
             if (isMobile()) {
-                // Генерируем уникальный идентификатор сессии
-                const sessionId = 'session_' + Math.random().toString(36).substring(2, 9);
-                
-                // Сохраняем сессию в localStorage
-                localStorage.setItem('phantom_session', sessionId);
-                localStorage.setItem('phantom_redirect_url', window.location.href);
-                
-                // URL для открытия Phantom App
-                const phantomDeepLink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodeURIComponent(`${window.location.origin}/phantom-callback.html?phantom_connect=${sessionId}`)}`;
-                
-                // Открываем приложение Phantom
-                window.location.href = phantomDeepLink;
-                
-                // Таймер для проверки возврата
-                setTimeout(() => {
-                    if (localStorage.getItem('phantom_session') === sessionId) {
-                        showNotification('Не удалось подключиться к Phantom', true);
-                        localStorage.removeItem('phantom_session');
-                        localStorage.removeItem('phantom_redirect_url');
-                    }
-                }, 30000);
-                
+                // Просто открываем Phantom без callback
+                window.location.href = "https://phantom.app/ul/v1/connect";
+                showNotification("Подтвердите подключение в Phantom, затем вернитесь в игру", false);
                 return;
             }
             
             // Для десктопной версии
-            if (window.solana && window.solana.isPhantom) {
-                try {
-                    // Запрашиваем разрешение на подключение
-                    const response = await window.solana.connect();
-                    if (response.publicKey) {
-                        handleWalletConnection(response.publicKey.toString());
-                    } else {
-                        throw new Error('Не удалось получить публичный ключ');
-                    }
-                } catch (error) {
-                    console.error('Ошибка подключения:', error);
-                    showNotification('Отменено пользователем', true);
+            if (window.solana?.isPhantom) {
+                const response = await window.solana.connect();
+                if (response.publicKey) {
+                    handleWalletConnection(response.publicKey.toString());
+                } else {
+                    throw new Error('Не удалось получить публичный ключ');
                 }
             } else {
                 const shouldInstall = confirm('Phantom Wallet не обнаружен. Хотите установить его?');
@@ -1755,7 +1729,7 @@ function initWallet() {
 
     function disconnectWallet() {
         // Отключаем кошелек через API Phantom, если доступно
-        if (window.solana && window.solana.disconnect) {
+        if (window.solana?.disconnect) {
             window.solana.disconnect();
         }
         
@@ -1791,55 +1765,18 @@ function initWallet() {
     }
 }
 
-// Проверка URL для обработки возврата из мобильного приложения
-function checkUrlForWalletConnection() {
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get('phantom_connect');
-    
-    if (sessionId && localStorage.getItem('phantom_session') === sessionId) {
-        const publicKey = params.get('publicKey');
-        
-        if (publicKey) {
-            handleWalletConnection(publicKey);
-            
-            // Очищаем URL параметры
-            const cleanUrl = localStorage.getItem('phantom_redirect_url') || window.location.origin + window.location.pathname;
-            localStorage.removeItem('phantom_session');
-            localStorage.removeItem('phantom_redirect_url');
-            window.history.replaceState({}, document.title, cleanUrl);
-        } else {
-            localStorage.removeItem('phantom_session');
-            localStorage.removeItem('phantom_redirect_url');
-        }
-    }
-}
-
 // Проверка на Telegram WebView
 function isTelegramWebView() {
     return /Telegram|WebView/i.test(navigator.userAgent);
 }
 
-// Улучшенная проверка мобильного устройства
+// Проверка мобильного устройства
 function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-           (window.innerWidth <= 768 && window.innerHeight <= 1024);
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
 function shortenAddress(address) {
     return address ? `${address.substring(0, 4)}...${address.substring(address.length - 4)}` : '';
 }
-
-// Обработка видимости страницы для мобильных устройств
-document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && localStorage.getItem('phantom_session')) {
-        setTimeout(() => {
-            if (localStorage.getItem('phantom_session')) {
-                showNotification('Не удалось подключить Phantom', true);
-                localStorage.removeItem('phantom_session');
-                localStorage.removeItem('phantom_redirect_url');
-            }
-        }, 1000);
-    }
-});
 
 //__________________________________________________WALLET________________________________________________________
