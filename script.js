@@ -1673,6 +1673,13 @@ function initWallet() {
         try {
             showLoading(true);
             
+            // Проверяем, если мы в Telegram WebView
+            if (isTelegramWebView()) {
+                showNotification('Для подключения кошелька откройте игру в браузере', true);
+                showLoading(false);
+                return;
+            }
+            
             // Проверяем мобильное устройство
             if (isMobile()) {
                 // Генерируем уникальный идентификатор сессии
@@ -1680,9 +1687,10 @@ function initWallet() {
                 
                 // Сохраняем сессию в localStorage
                 localStorage.setItem('phantom_session', sessionId);
+                localStorage.setItem('phantom_redirect_url', window.location.href);
                 
                 // URL для открытия Phantom App
-                const phantomDeepLink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodeURIComponent(`${window.location.origin}?phantom_connect=${sessionId}`)}`;
+                const phantomDeepLink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodeURIComponent(`${window.location.origin}/phantom-callback.html?phantom_connect=${sessionId}`)}`;
                 
                 // Открываем приложение Phantom
                 window.location.href = phantomDeepLink;
@@ -1692,6 +1700,7 @@ function initWallet() {
                     if (localStorage.getItem('phantom_session') === sessionId) {
                         showNotification('Не удалось подключиться к Phantom', true);
                         localStorage.removeItem('phantom_session');
+                        localStorage.removeItem('phantom_redirect_url');
                     }
                 }, 30000);
                 
@@ -1794,12 +1803,20 @@ function checkUrlForWalletConnection() {
             handleWalletConnection(publicKey);
             
             // Очищаем URL параметры
-            const cleanUrl = window.location.origin + window.location.pathname;
+            const cleanUrl = localStorage.getItem('phantom_redirect_url') || window.location.origin + window.location.pathname;
+            localStorage.removeItem('phantom_session');
+            localStorage.removeItem('phantom_redirect_url');
             window.history.replaceState({}, document.title, cleanUrl);
+        } else {
+            localStorage.removeItem('phantom_session');
+            localStorage.removeItem('phantom_redirect_url');
         }
-        
-        localStorage.removeItem('phantom_session');
     }
+}
+
+// Проверка на Telegram WebView
+function isTelegramWebView() {
+    return /Telegram|WebView/i.test(navigator.userAgent);
 }
 
 // Улучшенная проверка мобильного устройства
@@ -1819,6 +1836,7 @@ document.addEventListener('visibilitychange', () => {
             if (localStorage.getItem('phantom_session')) {
                 showNotification('Не удалось подключить Phantom', true);
                 localStorage.removeItem('phantom_session');
+                localStorage.removeItem('phantom_redirect_url');
             }
         }, 1000);
     }

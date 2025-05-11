@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Phantom Callback</title>
+    <script>
+        // Обрабатываем callback от Phantom
+        function handleCallback() {
+            const params = new URLSearchParams(window.location.search);
+            const sessionId = params.get('phantom_connect');
+            const publicKey = params.get('publicKey');
+            
+            if (sessionId && publicKey) {
+                // Сохраняем данные в localStorage
+                localStorage.setItem('phantom_public_key', publicKey);
+                localStorage.setItem('phantom_session', sessionId);
+                
+                // Возвращаемся на исходную страницу
+                const returnUrl = localStorage.getItem('phantom_redirect_url') || '../index.html';
+                window.location.href = returnUrl;
+            } else {
+                window.location.href = '../index.html';
+            }
+        }
+        
+        // Вызываем обработчик при загрузке
+        window.onload = handleCallback;
+    </script>
+</head>
+<body>
+    <p>Обработка подключения Phantom Wallet...</p>
+</body>
+</html>
