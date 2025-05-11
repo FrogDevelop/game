@@ -1624,6 +1624,15 @@ let walletAddress = '';
 document.addEventListener('DOMContentLoaded', () => {
     initWallet();
     checkUrlForWalletConnection();
+    
+    // Добавляем проверку доступности Phantom
+    if (window.solana) {
+        console.log('Phantom Wallet доступен');
+        window.solana.on('connect', () => {
+            console.log('Кошелек подключен!');
+            handleWalletConnection(window.solana.publicKey.toString());
+        });
+    }
 });
 
 function initWallet() {
@@ -1691,13 +1700,27 @@ function initWallet() {
             
             // Для десктопной версии
             if (window.solana && window.solana.isPhantom) {
-                const response = await window.solana.connect();
-                handleWalletConnection(response.publicKey.toString());
+                try {
+                    // Запрашиваем разрешение на подключение
+                    const response = await window.solana.connect();
+                    if (response.publicKey) {
+                        handleWalletConnection(response.publicKey.toString());
+                    } else {
+                        throw new Error('Не удалось получить публичный ключ');
+                    }
+                } catch (error) {
+                    console.error('Ошибка подключения:', error);
+                    showNotification('Отменено пользователем', true);
+                }
             } else {
-                window.open('https://phantom.app/download', '_blank');
-                showNotification('Установите Phantom Wallet для подключения', true);
+                const shouldInstall = confirm('Phantom Wallet не обнаружен. Хотите установить его?');
+                if (shouldInstall) {
+                    window.open('https://phantom.app/download', '_blank');
+                }
+                showNotification('Для подключения требуется Phantom Wallet', true);
             }
         } catch (error) {
+            console.error('Wallet connection error:', error);
             showNotification(`Ошибка подключения: ${error.message}`, true);
         } finally {
             showLoading(false);
@@ -1722,6 +1745,11 @@ function initWallet() {
     }
 
     function disconnectWallet() {
+        // Отключаем кошелек через API Phantom, если доступно
+        if (window.solana && window.solana.disconnect) {
+            window.solana.disconnect();
+        }
+        
         walletAddress = '';
         walletConnected = false;
         localStorage.removeItem('walletAddress');
@@ -1752,7 +1780,7 @@ function initWallet() {
             }
         }
     }
-};
+}
 
 // Проверка URL для обработки возврата из мобильного приложения
 function checkUrlForWalletConnection() {
@@ -1774,9 +1802,10 @@ function checkUrlForWalletConnection() {
     }
 }
 
-// Вспомогательные функции
+// Улучшенная проверка мобильного устройства
 function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+           (window.innerWidth <= 768 && window.innerHeight <= 1024);
 }
 
 function shortenAddress(address) {
