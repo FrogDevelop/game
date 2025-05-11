@@ -1616,116 +1616,183 @@ window.addEventListener('load', () => {
 //____________________________________________________________________LOAD
 
 //__________________________________________________WALLET________________________________________________________
+// Глобальные переменные для состояния кошелька
+let walletConnected = false;
+let walletAddress = '';
+
+// Инициализация кошелька при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
+    initWallet();
+    checkUrlForWalletConnection();
+});
+
+function initWallet() {
     const walletModal = document.getElementById('wallet-modal');
     const closeWalletButton = document.getElementById('close-wallet-modal');
     const connectPhantomBtn = document.getElementById('connect-wallet-phantom');
-    document.getElementById('disconnect-wallet').addEventListener('click', disconnectWallet);
+    const disconnectBtn = document.getElementById('disconnect-wallet');
     const walletDetails = document.getElementById('wallet-details');
     const walletInterface = document.getElementById('wallet-interface');
     const walletAddressDisplay = document.getElementById('wallet-address-display');
+    const walletButton = document.getElementById('wallet_button');
     const loadingSpinner = document.createElement('div');
     loadingSpinner.className = 'loading-spinner';
+
+    // Проверяем сохраненный кошелек
     const savedAddress = localStorage.getItem('walletAddress');
     if (savedAddress) {
-        walletAddressDisplay.textContent = `${savedAddress.substring(0, 4)}...${savedAddress.substring(savedAddress.length - 4)}`;
-        walletInterface.style.display = 'none';
-        walletDetails.style.display = 'flex';
+        walletAddress = savedAddress;
+        walletConnected = true;
+        updateWalletUI();
     }
 
-    // Открытие модалки при нажатии на кнопку кошелька
-    const walletButton = document.getElementById('wallet_button');
-    walletButton.addEventListener('click', () => {
-        walletModal.style.display = 'flex';
-    });
+    // Обработчики событий
+    walletButton.addEventListener('click', toggleWalletModal);
+    closeWalletButton.addEventListener('click', closeWalletModal);
+    connectPhantomBtn.addEventListener('click', connectWallet);
+    disconnectBtn.addEventListener('click', disconnectWallet);
 
-    // Закрытие модалки при нажатии на крестик
-    closeWalletButton.addEventListener('click', () => {
+    function toggleWalletModal() {
+        walletModal.style.display = walletModal.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    function closeWalletModal() {
         walletModal.style.display = 'none';
-    });
+    }
 
-    // Подключение Phantom
-    connectPhantomBtn.addEventListener('click', async () => {
-        walletInterface.appendChild(loadingSpinner); // Показываем индикатор загрузки
+    async function connectWallet() {
         try {
+            showLoading(true);
+            
+            // Проверяем мобильное устройство
+            if (isMobile()) {
+                // Генерируем уникальный идентификатор сессии
+                const sessionId = 'session_' + Math.random().toString(36).substring(2, 9);
+                
+                // Сохраняем сессию в localStorage
+                localStorage.setItem('phantom_session', sessionId);
+                
+                // URL для открытия Phantom App
+                const phantomDeepLink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodeURIComponent(`${window.location.origin}?phantom_connect=${sessionId}`)}`;
+                
+                // Открываем приложение Phantom
+                window.location.href = phantomDeepLink;
+                
+                // Таймер для проверки возврата
+                setTimeout(() => {
+                    if (localStorage.getItem('phantom_session') === sessionId) {
+                        showNotification('Не удалось подключиться к Phantom', true);
+                        localStorage.removeItem('phantom_session');
+                    }
+                }, 30000);
+                
+                return;
+            }
+            
+            // Для десктопной версии
             if (window.solana && window.solana.isPhantom) {
                 const response = await window.solana.connect();
-                const address = response.publicKey.toString();
-
-                walletAddressDisplay.textContent = address;
-                walletInterface.style.display = 'none';
-                walletDetails.style.display = 'block';
-
-                localStorage.setItem('walletAddress', address);
-
-                // Для Telegram WebApp
-                const tg = window.Telegram?.WebApp;
-                if (tg) {
-                    tg.sendData(JSON.stringify({ wallet: address }));
-                }
+                handleWalletConnection(response.publicKey.toString());
+            } else {
+                window.open('https://phantom.app/download', '_blank');
+                showNotification('Установите Phantom Wallet для подключения', true);
             }
-        } catch (err) {
-            alert('Ошибка подключения: ' + (err.message || 'Неизвестная ошибка'));
+        } catch (error) {
+            showNotification(`Ошибка подключения: ${error.message}`, true);
         } finally {
-            loadingSpinner.remove(); // Скрываем индикатор загрузки
+            showLoading(false);
         }
-    });
-});
-
-async function connectWallet() {
-  const loadingSpinner = document.createElement('div');
-  loadingSpinner.className = 'loading-spinner';
-  walletInterface.appendChild(loadingSpinner);
-  
-  try {
-    if (window.solana && window.solana.isPhantom) {
-      const response = await window.solana.connect();
-      const address = response.publicKey.toString();
-      
-    document.getElementById('disconnect-wallet').style.display = 'block';
-
-      // Форматируем адрес для отображения
-      const formattedAddress = `${address.substring(0, 4)}...${address.substring(address.length - 4)}`;
-      
-      walletAddressDisplay.textContent = formattedAddress;
-      walletAddressDisplay.setAttribute('title', address); // Полный адрес в tooltip
-      
-      walletInterface.style.display = 'none';
-      walletDetails.style.display = 'flex';
-      
-      // Получаем баланс (упрощенный пример)
-      const balance = await getWalletBalance(address);
-      document.getElementById('wallet-balance').textContent = `${balance} SOL`;
-      
-      // Сохраняем в localStorage
-      localStorage.setItem('walletAddress', address);
-      
-      // Для Telegram WebApp
-      const tg = window.Telegram?.WebApp;
-      if (tg) {
-        tg.sendData(JSON.stringify({ 
-          wallet: address,
-          balance: balance
-        }));
-      }
     }
-  } catch (err) {
-    showNotification('Ошибка подключения: ' + (err.message || 'Неизвестная ошибка'), true);
-  } finally {
-    loadingSpinner.remove();
-  }
-}
 
-function disconnectWallet() {
-    const walletInterface = document.getElementById('wallet-interface');
-    const walletDetails = document.getElementById('wallet-details');
-    document.getElementById('disconnect-wallet').style.display = 'none';
-    if (walletInterface && walletDetails) {
-        walletInterface.style.display = 'block';
-        walletDetails.style.display = 'none';
+    function handleWalletConnection(address) {
+        walletAddress = address;
+        walletConnected = true;
+        
+        localStorage.setItem('walletAddress', address);
+        updateWalletUI();
+        showNotification('Кошелек успешно подключен!');
+        
+        // Для Telegram WebApp
+        if (window.Telegram?.WebApp) {
+            window.Telegram.WebApp.sendData(JSON.stringify({ 
+                type: 'wallet_connected',
+                address: address
+            }));
+        }
+    }
+
+    function disconnectWallet() {
+        walletAddress = '';
+        walletConnected = false;
         localStorage.removeItem('walletAddress');
+        updateWalletUI();
         showNotification('Кошелек отключен');
     }
+
+    function updateWalletUI() {
+        if (walletConnected) {
+            walletInterface.style.display = 'none';
+            walletDetails.style.display = 'flex';
+            walletAddressDisplay.textContent = shortenAddress(walletAddress);
+            walletAddressDisplay.title = walletAddress;
+            disconnectBtn.style.display = 'block';
+        } else {
+            walletInterface.style.display = 'block';
+            walletDetails.style.display = 'none';
+            disconnectBtn.style.display = 'none';
+        }
+    }
+
+    function showLoading(show) {
+        if (show) {
+            walletInterface.appendChild(loadingSpinner);
+        } else {
+            if (loadingSpinner.parentNode) {
+                loadingSpinner.parentNode.removeChild(loadingSpinner);
+            }
+        }
+    }
+};
+
+// Проверка URL для обработки возврата из мобильного приложения
+function checkUrlForWalletConnection() {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('phantom_connect');
+    
+    if (sessionId && localStorage.getItem('phantom_session') === sessionId) {
+        const publicKey = params.get('publicKey');
+        
+        if (publicKey) {
+            handleWalletConnection(publicKey);
+            
+            // Очищаем URL параметры
+            const cleanUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+        
+        localStorage.removeItem('phantom_session');
+    }
 }
+
+// Вспомогательные функции
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function shortenAddress(address) {
+    return address ? `${address.substring(0, 4)}...${address.substring(address.length - 4)}` : '';
+}
+
+// Обработка видимости страницы для мобильных устройств
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && localStorage.getItem('phantom_session')) {
+        setTimeout(() => {
+            if (localStorage.getItem('phantom_session')) {
+                showNotification('Не удалось подключить Phantom', true);
+                localStorage.removeItem('phantom_session');
+            }
+        }, 1000);
+    }
+});
 
 //__________________________________________________WALLET________________________________________________________
