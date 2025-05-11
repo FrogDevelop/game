@@ -1616,7 +1616,6 @@ window.addEventListener('load', () => {
 //____________________________________________________________________LOAD
 
 //__________________________________________________WALLET________________________________________________________
-// Глобальные переменные для состояния кошелька
 let walletConnected = false;
 let walletAddress = '';
 
@@ -1624,18 +1623,17 @@ let walletAddress = '';
 document.addEventListener('DOMContentLoaded', () => {
     initWallet();
     
-    // Автопроверка подключенного кошелька
-    if (window.solana) {
+    // Проверка существования Phantom при загрузке
+    if (typeof window.solana !== 'undefined') {
         checkWalletConnection();
     }
 });
 
 async function checkWalletConnection() {
     try {
-        // Проверяем, есть ли уже подключение
-        if (window.solana.isConnected) {
-            const publicKey = await window.solana.connect();
-            handleWalletConnection(publicKey.toString());
+        if (window.solana && window.solana.isConnected) {
+            const response = await window.solana.connect();
+            handleWalletConnection(response.publicKey.toString());
         }
     } catch (error) {
         console.log('Кошелек не подключен:', error);
@@ -1651,8 +1649,6 @@ function initWallet() {
     const walletInterface = document.getElementById('wallet-interface');
     const walletAddressDisplay = document.getElementById('wallet-address-display');
     const walletButton = document.getElementById('wallet_button');
-    const loadingSpinner = document.createElement('div');
-    loadingSpinner.className = 'loading-spinner';
 
     // Проверяем сохраненный кошелек
     const savedAddress = localStorage.getItem('walletAddress');
@@ -1668,6 +1664,21 @@ function initWallet() {
     connectPhantomBtn.addEventListener('click', connectWallet);
     disconnectBtn.addEventListener('click', disconnectWallet);
 
+    // Подписываемся на события Phantom
+    if (window.solana) {
+        window.solana.on('connect', () => {
+            console.log('Кошелек подключен!');
+            if (window.solana.publicKey) {
+                handleWalletConnection(window.solana.publicKey.toString());
+            }
+        });
+
+        window.solana.on('disconnect', () => {
+            console.log('Кошелек отключен');
+            disconnectWallet();
+        });
+    }
+
     function toggleWalletModal() {
         walletModal.style.display = walletModal.style.display === 'flex' ? 'none' : 'flex';
     }
@@ -1678,76 +1689,26 @@ function initWallet() {
 
     async function connectWallet() {
         try {
-            showLoading(true);
-            
-            // Для Telegram WebView
-            if (isTelegramWebView()) {
+            // Для Telegram WebApp - предлагаем открыть в браузере
+            if (isTelegramWebApp()) {
                 showNotification('Для подключения кошелька откройте игру в браузере', true);
-                showLoading(false);
                 return;
             }
-            
-            // Для мобильных устройств
-            if (isMobile()) {
-                await connectMobileWallet();
-                return;
-            }
-            
-            // Для десктопной версии
-            if (window.solana?.isPhantom) {
-                await connectDesktopWallet();
-            } else {
+
+            // Проверяем наличие Phantom
+            if (typeof window.solana === 'undefined' || !window.solana.isPhantom) {
                 offerPhantomInstall();
+                return;
             }
-        } catch (error) {
-            console.error('Wallet connection error:', error);
-            showNotification(`Ошибка подключения: ${error.message}`, true);
-        } finally {
-            showLoading(false);
-        }
-    }
 
-    async function connectMobileWallet() {
-        // Создаем уникальный идентификатор сессии
-        const sessionId = 'session_' + Date.now();
-        localStorage.setItem('phantom_session', sessionId);
-        
-        // Параметры для запроса на подключение
-        const connectParams = {
-            app_url: window.location.origin,
-            redirect_link: window.location.href,
-            session_id: sessionId
-        };
-        
-        // Открываем Phantom с запросом на подключение
-        const phantomDeepLink = `https://phantom.app/ul/v1/connect?${new URLSearchParams(connectParams)}`;
-        window.location.href = phantomDeepLink;
-        
-        showNotification("Подтвердите подключение в Phantom", false);
-    }
-
-    async function connectDesktopWallet() {
-        try {
-            // Создаем запрос на подключение
-            const response = await window.solana.connect({ onlyIfTrusted: false });
+            // Подключаем кошелек
+            const response = await window.solana.connect();
+            handleWalletConnection(response.publicKey.toString());
             
-            if (response.publicKey) {
-                handleWalletConnection(response.publicKey.toString());
-            } else {
-                throw new Error('Не удалось получить публичный ключ');
-            }
         } catch (error) {
-            console.error('Ошибка подключения:', error);
-            throw error;
+            console.error('Ошибка подключения кошелька:', error);
+            showNotification(`Ошибка подключения: ${error.message}`, true);
         }
-    }
-
-    function offerPhantomInstall() {
-        const shouldInstall = confirm('Phantom Wallet не обнаружен. Хотите установить его?');
-        if (shouldInstall) {
-            window.open('https://phantom.app/download', '_blank');
-        }
-        showNotification('Для подключения требуется Phantom Wallet', true);
     }
 
     function handleWalletConnection(address) {
@@ -1758,7 +1719,7 @@ function initWallet() {
         updateWalletUI();
         showNotification('Кошелек успешно подключен!');
         
-        // Для Telegram WebApp
+        // Для Telegram WebApp отправляем данные
         if (window.Telegram?.WebApp) {
             window.Telegram.WebApp.sendData(JSON.stringify({ 
                 type: 'wallet_connected',
@@ -1769,7 +1730,7 @@ function initWallet() {
 
     function disconnectWallet() {
         if (window.solana?.disconnect) {
-            window.solana.disconnect();
+            window.solana.disconnect().catch(console.error);
         }
         
         walletAddress = '';
@@ -1793,27 +1754,20 @@ function initWallet() {
         }
     }
 
-    function showLoading(show) {
-        if (show) {
-            walletInterface.appendChild(loadingSpinner);
-        } else {
-            if (loadingSpinner.parentNode) {
-                loadingSpinner.parentNode.removeChild(loadingSpinner);
-            }
+    function offerPhantomInstall() {
+        const shouldInstall = confirm('Phantom Wallet не обнаружен. Хотите установить его?');
+        if (shouldInstall) {
+            window.open('https://phantom.app/download', '_blank');
         }
     }
 }
 
-// Проверка на Telegram WebView
-function isTelegramWebView() {
-    return /Telegram|WebView/i.test(navigator.userAgent);
+// Проверка на Telegram WebApp
+function isTelegramWebApp() {
+    return window.Telegram?.WebApp?.isTelegram;
 }
 
-// Проверка мобильного устройства
-function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
-
+// Сокращение адреса кошелька
 function shortenAddress(address) {
     return address ? `${address.substring(0, 4)}...${address.substring(address.length - 4)}` : '';
 }
