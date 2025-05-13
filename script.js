@@ -1499,36 +1499,19 @@ function drawPriceChart(data) {
 //________________________________________________________________________________Мессенджер (Darknet)
 
 //____________________________________________________________________LOAD
-// document.addEventListener('DOMContentLoaded', () => {
-//     // Инициализация Telegram WebApp
-//     const tg = window.Telegram?.WebApp;
-//     if (tg) {
-//         tg.expand();
-//         console.log('Telegram WebApp v'+tg.version+' initialized', {
-//             platform: tg.platform,
-//             viewportHeight: tg.viewportHeight,
-//             user: tg.initDataUnsafe?.user
-//         });
-//     }
+document.addEventListener('DOMContentLoaded', () => {
+    // Инициализация Telegram WebApp
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+        tg.expand();
+        console.log('Telegram WebApp v'+tg.version+' initialized', {
+            platform: tg.platform,
+            viewportHeight: tg.viewportHeight,
+            user: tg.initDataUnsafe?.user
+        });
+    }
+});
 
-//     await initWallet();
-    
-//     // Обработчик кнопки кошелька
-//     document.getElementById('wallet_button').addEventListener('click', async () => {
-//         if (tonWallet.connector.connected) {
-//             await disconnectWallet();
-//         } else {
-//             await connectWallet();
-//         }
-//     });
-// });
-
-// function initWalletWithRetry(attempt = 0) {
-//     if (attempt >= 3) {
-//         showNotification('Не удалось загрузить кошельки. Пожалуйста, обновите страницу.', true);
-//         return;
-//     }
-// }
 
 window.addEventListener('load', () => {
     const loader = document.getElementById('loading-screen');
