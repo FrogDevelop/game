@@ -1537,7 +1537,7 @@ export class TONWallet {
     constructor() {
         // Initialize the connector with proper options
         this.connector = new TonConnect({
-            manifestUrl: 'https://frogdevelop.github.io/Medium-Farm/tonconnect-manifest.json'
+            manifestUrl: 'https://frogdevelop.github.io/game/tonconnect-manifest.json'
         });
         this.account = null;
     }
