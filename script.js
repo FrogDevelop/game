@@ -1514,15 +1514,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 window.addEventListener('load', () => {
-    const loader = document.getElementById('loading-screen');
-    if (loader) {
-        setTimeout(() => {
-            loader.classList.add('loaded');
-            setTimeout(() => {
-                loader.remove();
-            }, 500);
-        }, 5000);
-    }
+    // const loader = document.getElementById('loading-screen');
+    // if (loader) {
+    //     setTimeout(() => {
+    //         loader.classList.add('loaded');
+    //         setTimeout(() => {
+    //             loader.remove();
+    //         }, 500);
+    //     }, 5000);
+    // }
     delete inventory['mixer_machine'];
     delete inventory['light'];
 });
