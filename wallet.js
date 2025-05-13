@@ -1,5 +1,4 @@
-// Import the SDK with the correct named export
-import { TonConnect } from 'https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest/+esm';
+import { TonConnect } from 'https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js';
 
 export class TONWallet {
     constructor() {
