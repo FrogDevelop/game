@@ -1529,7 +1529,7 @@ window.addEventListener('load', () => {
 //____________________________________________________________________LOAD
 
 // ____________________________________________________________WALLET
-// Import the SDK with the correct named export
+
 import { TonConnect } from 'https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest/+esm';
 
 

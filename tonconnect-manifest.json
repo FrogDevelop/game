@@ -1,7 +1,7 @@
 {
-    "name": "Medium Farm",
-    "url": "https://frogdevelop.github.io/game/",
-    "iconUrl": "https://frogdevelop.github.io/game/icon.png",
-    "termsOfUseUrl": " ",
-    "privacyPolicyUrl": " "
+  "url": "https://frogdevelop.github.io/game/",
+  "name": "mediumFarm",
+  "iconUrl": "https://frogdevelop.github.io/game/icon.png",
+  "termsOfUseUrl": "https://frogdevelop.github.io/game/terms.html",
+  "privacyPolicyUrl": "https://frogdevelop.github.io/game/privacy.html"
 }
