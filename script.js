@@ -484,9 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const buds = document.querySelectorAll('.bud');
     const darknetButton = document.getElementById('darknet_button');
     
-
-
-
     // Магазин
     function showShop() {
         if (shopModal) {
@@ -1098,31 +1095,6 @@ function showReplies(replies) {
         replyButtons.appendChild(btn);
     });
 }
-
-function sellProduct(amount, pricePerUnit) {
-    if (uncleDeals >= MAX_DEALS) {
-        addMessage('uncle', "Я уже рисковал достаточно. Ищи других покупателей!");
-        return;
-    }
-    
-    if (!inventory['zip_shishka'] || inventory['zip_shishka'].count < amount) {
-        addMessage('uncle', "У тебя даже столько нет! Не смеши меня.");
-        return;
-    }
-
-    const total = amount * pricePerUnit;
-    decreaseItem('zip_shishka', amount);
-    playerMoney += total;
-    uncleDeals++;
-    updateMoneyDisplay();
-    saveInventory();
-
-    addMessage('uncle', `Ладно, держи ${total}$. (${MAX_DEALS - uncleDeals} раз осталось)`);
-    
-    if (uncleDeals >= MAX_DEALS) {
-        addMessage('uncle', "Это был последний раз. Больше не пиши мне!");
-    }
-}
 function completeDeal(amount) {
     if (uncleStoppedBuying) return;
     
@@ -1160,7 +1132,6 @@ function completeDeal(amount) {
     }
 }
 function negotiateBetterPrice() {
-    const oldPrice = currentDealPrice;
     const success = Math.random() > 0.5;
     
     if (success) {
@@ -1181,19 +1152,6 @@ function negotiateBetterPrice() {
         };
         showDialogStep('uncle', 'selling_options', tempStep);
     }, 1000);
-}
-
-function updateDarknetPrices() {
-    // Каждые 5 продаж увеличиваем сложность
-    if (darknetReputation >= 5 && darknetReputation < 10) {
-        // Увеличиваем риски но и цены
-        dialogs.uncle.darknet_explain.message = 
-            "Ты привлекаешь внимание! Риски выше, но и цены растут.";
-    } else if (darknetReputation >= 10) {
-        // Открываем новые товары
-        dialogs.uncle.darknet_explain.message = 
-            "Теперь ты серьезный игрок. Доступны эксклюзивные товары!";
-    }
 }
 
 
@@ -1509,49 +1467,6 @@ function getPriceHistory(itemId) {
     localStorage.setItem(key, JSON.stringify(history));
     return history;
 }
-
-function drawPriceChart(data) {
-    const ctx = document.getElementById('priceChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.map((_, i) => `День ${i + 1}`),
-            datasets: [{
-                label: 'Цена за пакет',
-                data,
-                fill: false,
-                borderColor: '#00ff99',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: false,
-                    ticks: { callback: value => `${value}$` }
-                }
-            }
-        }
-    });
-}
-
-function getPriceHistory(itemId) {
-    const key = `priceHistory_${itemId}`;
-    const stored = localStorage.getItem(key);
-    let history = stored ? JSON.parse(stored) : [];
-
-    const newPrice = calculateDarknetPrice(itemId);
-    if (history.length >= 10) history.shift();
-    history.push(newPrice);
-
-    localStorage.setItem(key, JSON.stringify(history));
-    return history;
-}
-
 function drawPriceChart(data) {
     const ctx = document.getElementById('priceChart').getContext('2d');
     new Chart(ctx, {
@@ -1584,16 +1499,36 @@ function drawPriceChart(data) {
 //________________________________________________________________________________Мессенджер (Darknet)
 
 //____________________________________________________________________LOAD
-document.addEventListener('DOMContentLoaded', () => {
-    if (isTelegram) {
-        tg.enableClosingConfirmation();
-        tg.setHeaderColor('#4CAF50');
-        tg.setBackgroundColor('#111');
-        
-        console.log('Telegram WebApp initialized');
-        console.log('User:', tg.initDataUnsafe?.user);
-    }
-});
+// document.addEventListener('DOMContentLoaded', () => {
+//     // Инициализация Telegram WebApp
+//     const tg = window.Telegram?.WebApp;
+//     if (tg) {
+//         tg.expand();
+//         console.log('Telegram WebApp v'+tg.version+' initialized', {
+//             platform: tg.platform,
+//             viewportHeight: tg.viewportHeight,
+//             user: tg.initDataUnsafe?.user
+//         });
+//     }
+
+//     await initWallet();
+    
+//     // Обработчик кнопки кошелька
+//     document.getElementById('wallet_button').addEventListener('click', async () => {
+//         if (tonWallet.connector.connected) {
+//             await disconnectWallet();
+//         } else {
+//             await connectWallet();
+//         }
+//     });
+// });
+
+// function initWalletWithRetry(attempt = 0) {
+//     if (attempt >= 3) {
+//         showNotification('Не удалось загрузить кошельки. Пожалуйста, обновите страницу.', true);
+//         return;
+//     }
+// }
 
 window.addEventListener('load', () => {
     const loader = document.getElementById('loading-screen');
@@ -1602,11 +1537,6 @@ window.addEventListener('load', () => {
             loader.classList.add('loaded');
             setTimeout(() => {
                 loader.remove();
-                // Показываем подсказку о даркнете при первом запуске
-                if (!localStorage.getItem('darknetTutorialShown')) {
-                    showNotification("Даркнет доступен в телефоне. Рискованно, но прибыльно!");
-                    localStorage.setItem('darknetTutorialShown', 'true');
-                }
             }, 500);
         }, 5000);
     }
@@ -1615,161 +1545,38 @@ window.addEventListener('load', () => {
 });
 //____________________________________________________________________LOAD
 
-//__________________________________________________WALLET________________________________________________________
-let walletConnected = false;
-let walletAddress = '';
+// ____________________________________________________________WALLET
+import { TONWallet } from '/wallet.js';
 
-// Инициализация кошелька при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-    initWallet();
-    
-    // Проверка существования Phantom при загрузке
-    if (typeof window.solana !== 'undefined') {
-        checkWalletConnection();
-    }
+document.addEventListener('DOMContentLoaded', async () => {
+    const connectBtn = document.getElementById('connectBtn');
+    const walletInfo = document.getElementById('walletInfo');
+    const wallet = new TONWallet();
+
+    connectBtn.addEventListener('click', async () => {
+        // walletInfo.innerHTML = '<p>Connecting...</p>';
+        
+        try {
+            const account = await wallet.connect();
+            
+            if (!account) {
+                throw new Error('Connection failed');
+            }
+
+            const balance = await wallet.getBalance();
+            walletInfo.innerHTML = `
+                <p>Connected: ${shortAddress(account.address)}</p>
+                <p>Balance: ${balance} TON</p>
+            `;
+        } catch (error) {
+            walletInfo.innerHTML = `
+                <p style="color: red">Error: ${error.message}</p>
+                <button onclick="location.reload()">Retry</button>
+            `;
+        }
+    });
 });
 
-async function checkWalletConnection() {
-    try {
-        if (window.solana && window.solana.isConnected) {
-            const response = await window.solana.connect();
-            handleWalletConnection(response.publicKey.toString());
-        }
-    } catch (error) {
-        console.log('Кошелек не подключен:', error);
-    }
+function shortAddress(address) {
+    return address ? `${address.slice(0, 4)}...${address.slice(-4)}` : 'null';
 }
-
-function initWallet() {
-    const walletModal = document.getElementById('wallet-modal');
-    const closeWalletButton = document.getElementById('close-wallet-modal');
-    const connectPhantomBtn = document.getElementById('connect-wallet-phantom');
-    const disconnectBtn = document.getElementById('disconnect-wallet');
-    const walletDetails = document.getElementById('wallet-details');
-    const walletInterface = document.getElementById('wallet-interface');
-    const walletAddressDisplay = document.getElementById('wallet-address-display');
-    const walletButton = document.getElementById('wallet_button');
-
-    // Проверяем сохраненный кошелек
-    const savedAddress = localStorage.getItem('walletAddress');
-    if (savedAddress) {
-        walletAddress = savedAddress;
-        walletConnected = true;
-        updateWalletUI();
-    }
-
-    // Обработчики событий
-    walletButton.addEventListener('click', toggleWalletModal);
-    closeWalletButton.addEventListener('click', closeWalletModal);
-    connectPhantomBtn.addEventListener('click', connectWallet);
-    disconnectBtn.addEventListener('click', disconnectWallet);
-
-    // Подписываемся на события Phantom
-    if (window.solana) {
-        window.solana.on('connect', () => {
-            console.log('Кошелек подключен!');
-            if (window.solana.publicKey) {
-                handleWalletConnection(window.solana.publicKey.toString());
-            }
-        });
-
-        window.solana.on('disconnect', () => {
-            console.log('Кошелек отключен');
-            disconnectWallet();
-        });
-    }
-
-    function toggleWalletModal() {
-        walletModal.style.display = walletModal.style.display === 'flex' ? 'none' : 'flex';
-    }
-
-    function closeWalletModal() {
-        walletModal.style.display = 'none';
-    }
-
-    async function connectWallet() {
-        try {
-            // Для Telegram WebApp - предлагаем открыть в браузере
-            if (isTelegramWebApp()) {
-                showNotification('Для подключения кошелька откройте игру в браузере', true);
-                return;
-            }
-
-            // Проверяем наличие Phantom
-            if (typeof window.solana === 'undefined' || !window.solana.isPhantom) {
-                offerPhantomInstall();
-                return;
-            }
-
-            // Подключаем кошелек
-            const response = await window.solana.connect();
-            handleWalletConnection(response.publicKey.toString());
-            
-        } catch (error) {
-            console.error('Ошибка подключения кошелька:', error);
-            showNotification(`Ошибка подключения: ${error.message}`, true);
-        }
-    }
-
-    function handleWalletConnection(address) {
-        walletAddress = address;
-        walletConnected = true;
-        
-        localStorage.setItem('walletAddress', address);
-        updateWalletUI();
-        showNotification('Кошелек успешно подключен!');
-        
-        // Для Telegram WebApp отправляем данные
-        if (window.Telegram?.WebApp) {
-            window.Telegram.WebApp.sendData(JSON.stringify({ 
-                type: 'wallet_connected',
-                address: address
-            }));
-        }
-    }
-
-    function disconnectWallet() {
-        if (window.solana?.disconnect) {
-            window.solana.disconnect().catch(console.error);
-        }
-        
-        walletAddress = '';
-        walletConnected = false;
-        localStorage.removeItem('walletAddress');
-        updateWalletUI();
-        showNotification('Кошелек отключен');
-    }
-
-    function updateWalletUI() {
-        if (walletConnected) {
-            walletInterface.style.display = 'none';
-            walletDetails.style.display = 'flex';
-            walletAddressDisplay.textContent = shortenAddress(walletAddress);
-            walletAddressDisplay.title = walletAddress;
-            disconnectBtn.style.display = 'block';
-        } else {
-            walletInterface.style.display = 'block';
-            walletDetails.style.display = 'none';
-            disconnectBtn.style.display = 'none';
-        }
-    }
-
-    function offerPhantomInstall() {
-        const shouldInstall = confirm('Phantom Wallet не обнаружен. Хотите установить его?');
-        if (shouldInstall) {
-            window.open('https://phantom.app/download', '_blank');
-        }
-    }
-}
-
-// Проверка на Telegram WebApp
-function isTelegramWebApp() {
-    return window.Telegram?.WebApp?.isTelegram;
-}
-
-// Сокращение адреса кошелька
-function shortenAddress(address) {
-    return address ? `${address.substring(0, 4)}...${address.substring(address.length - 4)}` : '';
-}
-
-//__________________________________________________WALLET________________________________________________________
