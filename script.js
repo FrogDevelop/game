@@ -10,11 +10,6 @@ function getReputationTitle(reputation) {
     return "Newbie";
 }
 
-function openBuyInterface(app) {
-    alert("Открыт интерфейс покупки для: " + (app?.name || "неизвестного товара"));
-    // Здесь можно добавить отображение интерфейса покупки, создание модального окна и т.п.
-}
-
 function getDarkItemImage(id) {
     return `zip_shishka.png`; // или путь, который у тебя в проекте
 }
@@ -33,14 +28,10 @@ const _preloaderStart = Date.now();
 
 // Добавьте в начало script.js с другими переменными
 let darknetReputation = parseInt(localStorage.getItem('darknetReputation')) || 0;
-let darknetUnlocked = localStorage.getItem('darknetUnlocked') === 'true';
 
 let playerMoney = parseInt(localStorage.getItem('playerMoney')) || 500;
-let shishCount = parseInt(localStorage.getItem('shishCount')) || 0;
 let inventory = JSON.parse(localStorage.getItem('inventory')) || {};
 let inventoryItems; 
-let baseItem = null;
-let additiveItem = null;
 
 let growthBoostActive = false;
 let yieldBoostActive = false;
@@ -852,8 +843,6 @@ const Phone = (() => {
         Phone.init();
     });
 
-
-    const phoneApps = document.querySelectorAll('.phone-app');
     function init() {
         initElements();
         const phoneAppsContainer = document.querySelector('.phone-apps');
@@ -1170,15 +1159,6 @@ function addMessage(sender, text) {
 
 const priceHistory = [];
 
-function getCurrentPrice() {
-    const base = 50;
-    const fluctuation = Math.floor(Math.random() * 20 - 10); // ±10
-    const currentPrice = base + fluctuation + (darknetReputation * 10);
-    priceHistory.push(currentPrice);
-    if (priceHistory.length > 10) priceHistory.shift(); // ограничим длину
-    return currentPrice;
-}
-
 function generateDemand() {
     // Базовый спрос + случайные колебания + влияние репутации
     const baseDemand = 50;
@@ -1304,21 +1284,6 @@ function initDarknetApp() {
         }
     });
 }
-
-// Функция для обновления графика без пересоздания
-function updatePriceChart(newPrice) {
-    if (!priceChartInstance) return;
-    
-    // Добавляем новую цену в историю
-    priceHistory.push(newPrice);
-    if (priceHistory.length > 10) priceHistory.shift();
-    
-    // Обновляем данные графика
-    priceChartInstance.data.labels = priceHistory.map((_, i) => `Тик ${i + 1}`);
-    priceChartInstance.data.datasets[0].data = priceHistory;
-    priceChartInstance.update();
-}
-
 
 function renderDarknetMarket() {
     const market = document.getElementById('darknet-market');
@@ -1455,47 +1420,6 @@ function sellOnDarknet(itemId, quantity) {
     }
 }
 
-function getPriceHistory(itemId) {
-    const key = `priceHistory_${itemId}`;
-    const stored = localStorage.getItem(key);
-    let history = stored ? JSON.parse(stored) : [];
-
-    const newPrice = calculateDarknetPrice(itemId);
-    if (history.length >= 10) history.shift();
-    history.push(newPrice);
-
-    localStorage.setItem(key, JSON.stringify(history));
-    return history;
-}
-function drawPriceChart(data) {
-    const ctx = document.getElementById('priceChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.map((_, i) => `День ${i + 1}`),
-            datasets: [{
-                label: 'Цена за пакет',
-                data,
-                fill: false,
-                borderColor: '#00ff99',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: false,
-                    ticks: { callback: value => `${value}$` }
-                }
-            }
-        }
-    });
-}
-
 //________________________________________________________________________________Мессенджер (Darknet)
 
 //____________________________________________________________________LOAD
@@ -1529,89 +1453,96 @@ window.addEventListener('load', () => {
 //____________________________________________________________________LOAD
 
 // ____________________________________________________________WALLET
-
-import { TonConnect } from 'https://cdn.jsdelivr.net/npm/@tonconnect/sdk@latest/+esm';
-
+import { TonConnectUI } from 'https://cdn.jsdelivr.net/npm/@tonconnect/ui@latest/+esm';
+import { Address } from 'https://cdn.jsdelivr.net/npm/@ton/core@latest/+esm';
 
 export class TONWallet {
     constructor() {
-        // Initialize the connector with proper options
-        this.connector = new TonConnect({
-            manifestUrl: 'https://frogdevelop.github.io/game/tonconnect-manifest.json'
+        this.connector = new TonConnectUI({
+            manifestUrl: 'https://frogdevelop.github.io/game/tonconnect-manifest.json',
+            uiPreferences: {
+                language: 'ru',
+                returnStrategy: 'back',
+            },
         });
+
         this.account = null;
+        this.walletStatus = document.getElementById('wallet-status');
+        this.walletAddress = document.getElementById('wallet-address');
+        this.walletBalance = document.getElementById('wallet-balance');
+        this.disconnectBtn = document.getElementById('disconnect-wallet');
+        this.walletModal = document.getElementById('wallet-modal');
+        this.walletButton = document.getElementById('wallet_button');
+        this.connectBtn = document.getElementById('сonnectBtn');
+
+        this.init();
     }
 
-    async connect() {
-        try {
-            // Check existing connection
-            if (this.connector.connected) {
-                this.account = this.connector.account;
-                return this.account;
+    init() {
+        this.disconnectBtn.addEventListener('click', () => this.disconnect());
+        document.getElementById('close-wallet-button').addEventListener('click', () => this.closeModal());
+
+        this.walletButton.addEventListener('click', () => {
+            this.walletModal.classList.add('open');
+        });
+
+        this.connectBtn.addEventListener('click', () => {
+            this.connector.openModal();
+        });
+
+        this.connector.onStatusChange((wallet) => {
+            if (wallet) {
+                this.handleConnected(wallet);
+            } else {
+                this.handleDisconnected();
             }
+        });
 
-            // Get available wallets
-            const wallets = await this.connector.getWallets();
-            if (!wallets.length) {
-                throw new Error('No wallets available');
-            }
-
-            // Generate universal connection link
-            const universalLink = this.connector.connect(wallets[0]);
-            
-            // Open the connection link (you might want to open this in a new tab)
-            window.open(universalLink, '_blank');
-
-            // Wait for connection status change
-            return new Promise((resolve) => {
-                this.connector.onStatusChange((wallet) => {
-                    if (wallet) {
-                        this.account = wallet;
-                        resolve(wallet);
-                    }
-                });
-            });
-        } catch (error) {
-            console.error('Connection error:', error);
-            throw error;
+        // Проверка существующего подключения
+        if (this.connector.connected) {
+            this.handleConnected(this.connector.wallet);
         }
     }
 
-    async getBalance() {
-        if (!this.account) {
-            throw new Error('Wallet not connected');
-        }
-        return '100.00'; // Replace with actual balance check
+    closeModal() {
+        this.walletModal.classList.remove('open');
+    }
+
+    async handleConnected(wallet) {
+        this.account = wallet;
+        const rawAddress = wallet.account.address;
+        const friendlyAddress = Address.parse(rawAddress).toString({ testOnly: false }); // Преобразуем в EQ...
+
+        this.walletAddress.textContent = `${shortAddress(friendlyAddress)}`;
+        this.walletStatus.textContent = 'Подключено';
+        this.connectBtn.style.display = 'none';
+        this.disconnectBtn.style.display = 'block';
+
+        document.getElementById('wallet-info').style.display = 'block';
+
+        showNotification(`Кошелек ${wallet.device.appName} успешно подключен!`);
+    }
+
+
+    handleDisconnected() {
+
+        this.account = null;
+        this.walletAddress.textContent = ``;
+        this.walletStatus.textContent = 'Не подключено';
+        this.connectBtn.style.display = 'block';
+        this.disconnectBtn.style.display = 'none';
+
+        document.getElementById('wallet-info').style.display = 'none';
+    }
+
+    async disconnect() {
+        await this.connector.disconnect();
+        this.handleDisconnected();
     }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const connectBtn = document.getElementById('connectBtn');
-    const walletInfo = document.getElementById('walletInfo');
+document.addEventListener('DOMContentLoaded', () => {
     const wallet = new TONWallet();
-
-    connectBtn.addEventListener('click', async () => {
-        // walletInfo.innerHTML = '<p>Connecting...</p>';
-        
-        try {
-            const account = await wallet.connect();
-            
-            if (!account) {
-                throw new Error('Connection failed');
-            }
-
-            const balance = await wallet.getBalance();
-            walletInfo.innerHTML = `
-                <p>Connected: ${shortAddress(account.address)}</p>
-                <p>Balance: ${balance} TON</p>
-            `;
-        } catch (error) {
-            walletInfo.innerHTML = `
-                <p style="color: red">Error: ${error.message}</p>
-                <button onclick="location.reload()">Retry</button>
-            `;
-        }
-    });
 });
 
 function shortAddress(address) {

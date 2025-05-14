@@ -1333,22 +1333,162 @@ a:focus {
 /* ________________________________________________APP DARKNET______________________________________ */
 
 /*___________________________________________TON Wallet Modal Styles________________________________ */
-
-#wallet-info {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 5px 10px;
-    border-radius: 5px;
-    color: white;
-    font-size: 12px;
-    z-index: 1000;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-family: "Cal Sans", sans-serif;
+#wallet-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #121212;
+  color: white;
+  z-index: 10000;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto;
+  font-family: 'Roboto', sans-serif;
 }
 
-#wallet-info:hover {
-    background: rgba(76, 175, 80, 0.7);
+#wallet-modal.open {
+  display: flex;
+}
+
+.wallet-content {
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  padding: 30px 20px 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.close-wallet-button {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 28px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.close-wallet-button:hover {
+  color: white;
+}
+
+.wallet-header {
+  text-align: center;
+  margin-top: 60px;
+  margin-bottom: 30px;
+}
+
+.wallet-header h2 {
+  font-size: 26px;
+  margin: 0;
+}
+
+.wallet-description {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 15px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.wallet-info {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  width: 100%;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.wallet-info p {
+  margin: 10px 0;
+  font-size: 20px;
+}
+
+.wallet-address {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 18px;
+  word-break: break-word;
+  color: #ccc;
+}
+
+.balance-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+.wallet-actions {
+  width: 100%;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.wallet-button {
+  width: 100%;
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s;
+}
+
+.wallet-button.connect {
+  background: rgba(115, 255, 68, 0.1);
+  color: #79ff44;
+  border: 1px solid rgba(30, 255, 0, 0.3);
+}
+
+.wallet-button.connect:hover {
+  background: #43a047;
+}
+
+.wallet-button.disconnect {
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+}
+
+.wallet-button.disconnect:hover {
+  background: rgba(255, 68, 68, 0.2);
+}
+
+.wallet-footer {
+  text-align: center;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 20px;
+}
+
+/* Для мобильных */
+@media (max-width: 480px) {
+  .wallet-content {
+    padding: 20px 15px;
+  }
+
+  .wallet-header {
+    margin-top: 80px;
+  }
+
+  .wallet-button {
+    padding: 14px;
+    font-size: 15px;
+  }
+}
+
+tc-root{
+    position: relative;
+    z-index: 999999;
 }

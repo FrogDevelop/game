@@ -117,9 +117,27 @@
         </div>
     </div>
 
-    <div id="wallet-info" style="display: none; position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 5px; color: white; font-size: 12px; z-index: 1000;">
-        <span id="wallet-address-short"></span>
+    <div id="wallet-modal" class="wallet-modal">
+    <div class="wallet-content">
+        <div class="wallet-header">
+            <button class="close-wallet-button" id="close-wallet-button">&times;</button>
+            <img src="big-wallet.png" alt="">
+            <h2>TON Кошелек</h2>
+            <p class="wallet-description">Подключите кошелек TON, чтобы получить монеты на листинге!</p>
+        </div>
+        <div class="wallet-info" id="wallet-info" style="display: none;">
+            <p>Адрес: <span class="wallet-address" id="wallet-address"></span></p>
+            <p>Статус: <span id="wallet-status" style="color: rgb(134, 224, 0); font-size: 18px;"></span></p>
+        </div>
+        <div class="wallet-actions">
+            <button id="сonnectBtn" class="wallet-button connect">Подключить кошелек</button>
+            <button id="disconnect-wallet" class="wallet-button disconnect" style="display: none;">Отключить</button>
+        </div>
+        <div class="wallet-footer">Мы доверяем только проверенным кошелькам</div>
     </div>
+    </div>
+
+
 
     <div id="buff-status-container" class="buff-status-container"></div>
     
@@ -138,10 +156,10 @@
                 <p>Инвентарь</p>
             </div>
             <div class="btn-cont">
-                <button class="menu_button" id="connectBtn"><img src="wallet.png" alt=""></button>
+                <button class="menu_button" id="wallet_button"><img src="wallet.png" alt=""></button>
                 <p>Кошелек</p>
             </div>
         </div>
     </footer>
 </body>
-</html>
+</html> 
